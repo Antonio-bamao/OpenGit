@@ -12,10 +12,12 @@ export function createInitialGitState(): GitState {
     initialized: false,
     branch: "main",
     branches: ["main"],
+    branchHeads: { main: null },
     head: null,
     files: initialFiles.map((file) => ({ ...file })),
     commits: [],
-    remoteCommits: []
+    remoteCommits: [],
+    remoteBranchHeads: {}
   };
 }
 
@@ -154,7 +156,9 @@ function commitFiles(state: GitState, args: string[]): CommandResult {
   const commit: GitCommit = {
     hash,
     message,
-    files: staged.map((file) => file.path)
+    files: staged.map((file) => file.path),
+    branch: state.branch,
+    parentHash: state.head
   };
   const files = state.files.map((file) =>
     file.status === "staged" ? { ...file, status: "tracked" as const } : file
@@ -165,6 +169,10 @@ function commitFiles(state: GitState, args: string[]): CommandResult {
       ...state,
       head: hash,
       files,
+      branchHeads: {
+        ...state.branchHeads,
+        [state.branch]: hash
+      },
       commits: [commit, ...state.commits]
     },
     output: `[${state.branch} ${hash}] ${message}\n ${staged.length} files changed`,
@@ -182,7 +190,9 @@ function showLog(state: GitState): CommandResult {
     return notARepository(state);
   }
 
-  if (state.commits.length === 0) {
+  const commits = getReachableCommits(state);
+
+  if (commits.length === 0) {
     return {
       state,
       output: `fatal: your current branch '${state.branch}' does not have any commits yet`
@@ -191,7 +201,7 @@ function showLog(state: GitState): CommandResult {
 
   return {
     state,
-    output: state.commits
+    output: commits
       .map((commit) => `commit ${commit.hash}\nAuthor: OpenGit <learn@opengit.local>\n\n    ${commit.message}`)
       .join("\n\n")
   };
@@ -303,7 +313,11 @@ function switchBranch(state: GitState, args: string[]): CommandResult {
       state: {
         ...state,
         branch: branchName,
-        branches: state.branches.includes(branchName) ? state.branches : [...state.branches, branchName]
+        branches: state.branches.includes(branchName) ? state.branches : [...state.branches, branchName],
+        branchHeads: {
+          ...state.branchHeads,
+          [branchName]: state.branchHeads[branchName] ?? state.head
+        }
       },
       output: `Switched to a new branch '${branchName}'`,
       effect: {
@@ -321,7 +335,7 @@ function switchBranch(state: GitState, args: string[]): CommandResult {
   }
 
   return {
-    state: { ...state, branch: branchName },
+    state: { ...state, branch: branchName, head: state.branchHeads[branchName] ?? null },
     output: `Switched to branch '${branchName}'`,
     effect: {
       type: "switch"
@@ -334,8 +348,9 @@ function pushCommits(state: GitState): CommandResult {
     return notARepository(state);
   }
 
+  const localCommits = getReachableCommits(state);
   const remoteHashes = new Set(state.remoteCommits.map((commit) => commit.hash));
-  const commitsToPush = state.commits.filter((commit) => !remoteHashes.has(commit.hash));
+  const commitsToPush = localCommits.filter((commit) => !remoteHashes.has(commit.hash));
 
   if (commitsToPush.length === 0) {
     return {
@@ -347,7 +362,14 @@ function pushCommits(state: GitState): CommandResult {
   return {
     state: {
       ...state,
-      remoteCommits: state.commits.map((commit) => ({ ...commit, files: [...commit.files] }))
+      remoteCommits: dedupeCommits([
+        ...localCommits.map((commit) => ({ ...commit, files: [...commit.files] })),
+        ...state.remoteCommits
+      ]),
+      remoteBranchHeads: {
+        ...state.remoteBranchHeads,
+        [state.branch]: state.head
+      }
     },
     output: `pushed ${commitsToPush.length} ${pluralize("commit", commitsToPush.length)} to origin/${state.branch}`,
     effect: {
@@ -388,4 +410,35 @@ function wasCommitted(state: GitState, filePath: string): boolean {
 
 function pluralize(word: string, count: number): string {
   return count === 1 ? word : `${word}s`;
+}
+
+function getReachableCommits(state: GitState): GitCommit[] {
+  const commitsByHash = new Map(state.commits.map((commit) => [commit.hash, commit]));
+  const commits: GitCommit[] = [];
+  let cursor = state.head;
+
+  while (cursor) {
+    const commit = commitsByHash.get(cursor);
+    if (!commit) {
+      break;
+    }
+
+    commits.push(commit);
+    cursor = commit.parentHash;
+  }
+
+  return commits;
+}
+
+function dedupeCommits(commits: GitCommit[]): GitCommit[] {
+  const seen = new Set<string>();
+
+  return commits.filter((commit) => {
+    if (seen.has(commit.hash)) {
+      return false;
+    }
+
+    seen.add(commit.hash);
+    return true;
+  });
 }

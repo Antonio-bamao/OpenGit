@@ -60,3 +60,13 @@
 - 解决方案：Reran `pnpm test` with approved elevated permissions; the expected red failure then appeared because `command-parser` and `git-simulator` did not exist yet.
 - 预防措施：Use the approved `pnpm test` path when Vitest reports `spawn EPERM` in this environment.
 - 状态：Resolved.
+
+## Next dev server missing webpack chunk after build
+
+- 现象：本地浏览器反复出现 Next Server Error，报 `Cannot find module './987.js'`，终端里 `/_next/static/chunks/fallback/pages/_app.js` 和 `_error.js` 返回 500。
+- 触发条件：`pnpm dev` 正在运行时又执行 `pnpm build`，两者同时写入 `.next` 目录。
+- 影响：开发热更新服务引用的 webpack chunk 被生产构建覆盖或清理，导致 3900 端口页面短时间不可用。
+- 根因：Next.js dev server 和 production build 共用 `.next` 输出目录，不应该并发运行。
+- 解决方案：停止坏掉的 dev 进程，删除 `.next` 缓存，重新运行 `pnpm dev`；后续开发阶段只跑 `pnpm test`、`pnpm lint` 和 HTTP 检查。
+- 预防措施：需要生产构建验证时，先停止 `pnpm dev`；不要在热更新服务运行时执行 `pnpm build`。
+- 状态：Resolved.

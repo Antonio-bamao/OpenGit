@@ -9,6 +9,8 @@ export interface GitCommit {
   hash: string;
   message: string;
   files: string[];
+  branch: string;
+  parentHash: string | null;
 }
 
 export interface GitHint {
@@ -20,10 +22,12 @@ export interface GitState {
   initialized: boolean;
   branch: string;
   branches: string[];
+  branchHeads: Record<string, string | null>;
   head: string | null;
   files: GitFile[];
   commits: GitCommit[];
   remoteCommits: GitCommit[];
+  remoteBranchHeads: Record<string, string | null>;
 }
 
 export interface GitCommand {

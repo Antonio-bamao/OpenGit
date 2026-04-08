@@ -85,6 +85,34 @@ describe("executeGitCommand", () => {
     expect(result.output).toContain("* feature/flow");
   });
 
+  it("keeps independent branch heads when committing on a feature branch", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+
+    expect(state.branchHeads.main).toBe("c000001");
+
+    state = executeGitCommand(state, "git switch -c feature/flow").state;
+    expect(state.branchHeads["feature/flow"]).toBe("c000001");
+
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "feature work"').state;
+
+    expect(state.head).toBe("c000002");
+    expect(state.branchHeads.main).toBe("c000001");
+    expect(state.branchHeads["feature/flow"]).toBe("c000002");
+
+    const switchResult = executeGitCommand(state, "git switch main");
+    state = switchResult.state;
+
+    expect(state.branch).toBe("main");
+    expect(state.head).toBe("c000001");
+
+    const logResult = executeGitCommand(state, "git log");
+    expect(logResult.output).toContain("main base");
+    expect(logResult.output).not.toContain("feature work");
+  });
+
   it("pushes local commits into the simulated remote", () => {
     let state = executeGitCommand(createInitialGitState(), "git init").state;
     state = executeGitCommand(state, "git add .").state;

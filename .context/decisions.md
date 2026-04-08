@@ -22,3 +22,10 @@
 - 决策：保持 Next.js 14 主版本约束，将 `next` 和 `eslint-config-next` 升级到 npm registry 中可用的 `14.2.35`。
 - 理由：满足项目指定的 Next.js 14 技术栈，同时避免已知有安全警告的旧补丁版本。
 - 约束：后续如果要升级 Next 15/16，需要作为单独技术决策记录，而不是跟随 `latest` 自动漂移。
+
+## 2026-04-08 - Playground 采用状态模型 + ViewModel + 展示面板分层
+
+- 背景：`/playground` 同时包含命令执行、Git 状态推导、任务路线、工作流图、引用指针和终端 UI，如果全部写在一个组件中，后续改一个区域会牵动整个页面。
+- 决策：把命令模拟放在 `src/lib/git-sim/git-simulator.ts`，把 UI 派生数据放在 `playground-view-model.ts` 和 `git-graph-view-model.ts`，把 React 展示拆成独立 panel 组件，由 `PlaygroundShell` 只负责组合状态和事件。
+- 理由：状态机、查询/投影层和展示层分离后，可以单独测试每个行为，后续扩展分支图、HEAD 动画或场景任务时不需要重写终端和其他面板。
+- 约束：新增可视化必须优先通过纯函数 view model 派生数据；React panel 不直接修改 Git 状态；命令行为变更必须先补 `git-sim` 测试。

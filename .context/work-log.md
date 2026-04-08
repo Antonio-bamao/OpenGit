@@ -49,3 +49,19 @@
 - 结果：MVP 支持更多常用命令，`git add`、`git commit`、`git push` 等操作会同步更新流水线中的文件/提交位置，`reset`/`restore --staged` 会高亮工作区与暂存区之间的连接。
 - 验证：先运行新增 simulator 测试得到 5 个预期失败；实现后 `pnpm test` 2 个测试文件、8 个测试全部通过；`pnpm lint` 无警告或错误；`pnpm build` 成功；`http://localhost:3900/playground` 返回 200。
 - 下一步：补充场景化任务、分支图和 HEAD/引用可视化。
+
+## 2026-04-08 21:00 - 新增任务路线与引用指针
+
+- 目标：继续 Phase 2，让 Playground 能提示下一步学习任务，并把 HEAD、当前分支、本地提交和远端引用的关系展示出来。
+- 动作：新增 `getLearningChecklist` helper 和测试；在 `/playground` 右侧加入任务路线卡片与“填入下一步”按钮；在仓库状态区加入 `HEAD -> branch -> commit -> origin/<branch>` 引用指针和分支标签。
+- 结果：用户可以按 `git init`、`git add .`、`git commit -m "first commit"`、`git switch -c feature/flow`、`git push` 的路线推进，页面会同步标记完成状态并展示引用位置。
+- 验证：先运行 `pnpm test src/lib/git-sim/learning-guide.test.ts` 得到 helper 缺失红灯；实现后 `pnpm test` 3 个测试文件、9 个测试全部通过；`pnpm lint` 无警告或错误；`http://localhost:3900/playground` 返回 200 且包含任务路线和引用指针内容。
+- 下一步：扩展更完整的分支图、HEAD 移动动画和场景任务内容。
+
+## 2026-04-08 21:35 - 模块化 Playground 与分支图模型
+
+- 目标：按用户要求降低 Playground 耦合度，避免后续修改一个 UI 区域牵动命令模拟、状态推导和其他面板。
+- 动作：将 `PlaygroundShell` 收敛为状态容器和面板组合；新增终端、工作流、任务路线、仓库洞察、分支图等独立面板；新增 `playground-view-model` 和 `git-graph-view-model` 纯函数层；用 TDD 扩展 Git 状态模型，增加 `branchHeads`、`remoteBranchHeads`、commit 所属分支与 parent 指针。
+- 结果：命令执行器、状态推导和 React 展示层分离；`main` 与 `feature/flow` 等分支会保留独立 head；分支图现在能展示 commit、HEAD、本地分支和远端引用。
+- 验证：先运行 `pnpm test src/lib/git-sim/git-simulator.test.ts src/lib/git-sim/git-graph-view-model.test.ts` 得到预期红灯；实现后 `pnpm test` 5 个测试文件、12 个测试全部通过；`pnpm lint` 无警告或错误；`http://localhost:3900/playground` 返回 200 且包含分支图和可视化面板。
+- 下一步：继续扩展场景任务内容、HEAD/引用动画细节，以及更完整的分支命令覆盖。
