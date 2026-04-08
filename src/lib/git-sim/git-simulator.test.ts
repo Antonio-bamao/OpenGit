@@ -85,6 +85,48 @@ describe("executeGitCommand", () => {
     expect(result.output).toContain("* feature/flow");
   });
 
+  it("creates and deletes branches without switching away from the current branch", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+
+    let result = executeGitCommand(state, "git branch feature/branch-map");
+    state = result.state;
+
+    expect(result.output).toContain("Created branch 'feature/branch-map'");
+    expect(state.branch).toBe("main");
+    expect(state.branches).toContain("feature/branch-map");
+    expect(state.branchHeads["feature/branch-map"]).toBe(state.head);
+
+    result = executeGitCommand(state, "git branch -d feature/branch-map");
+    state = result.state;
+
+    expect(result.output).toContain("Deleted branch feature/branch-map");
+    expect(state.branches).not.toContain("feature/branch-map");
+    expect(state.branchHeads["feature/branch-map"]).toBeUndefined();
+  });
+
+  it("supports checkout aliases for switching and creating branches", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+
+    let result = executeGitCommand(state, "git checkout -b feature/checkout-flow");
+    state = result.state;
+
+    expect(result.output).toContain("Switched to a new branch 'feature/checkout-flow'");
+    expect(result.effect?.type).toBe("switch");
+    expect(state.branch).toBe("feature/checkout-flow");
+    expect(state.branchHeads["feature/checkout-flow"]).toBe("c000001");
+
+    result = executeGitCommand(state, "git checkout main");
+    state = result.state;
+
+    expect(result.output).toContain("Switched to branch 'main'");
+    expect(state.branch).toBe("main");
+    expect(state.head).toBe("c000001");
+  });
+
   it("keeps independent branch heads when committing on a feature branch", () => {
     let state = executeGitCommand(createInitialGitState(), "git init").state;
     state = executeGitCommand(state, "git add README.md").state;

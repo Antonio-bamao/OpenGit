@@ -53,8 +53,10 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
     case "reset":
       return resetStaging(state);
     case "branch":
-      return listBranches(state);
+      return handleBranchCommand(state, command.args);
     case "switch":
+      return switchBranch(state, command.args);
+    case "checkout":
       return switchBranch(state, command.args);
     case "push":
       return pushCommits(state);
@@ -64,7 +66,7 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前覆盖 init、status、add、commit、log、diff、restore、reset、branch、switch 和 push。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 init、status、add、commit、log、diff、restore、reset、branch、switch、checkout 和 push。后续会逐步扩展更多 Git 命令。"
         }
       };
   }
@@ -284,14 +286,96 @@ function unstageFiles(state: GitState, target: string): CommandResult {
   };
 }
 
-function listBranches(state: GitState): CommandResult {
+function handleBranchCommand(state: GitState, args: string[]): CommandResult {
   if (!state.initialized) {
     return notARepository(state);
   }
 
+  if (args.length === 0) {
+    return listBranches(state);
+  }
+
+  if (args[0] === "-d" || args[0] === "--delete") {
+    return deleteBranch(state, args[1]);
+  }
+
+  return createBranch(state, args[0], false);
+}
+
+function listBranches(state: GitState): CommandResult {
   return {
     state,
     output: state.branches.map((branch) => `${branch === state.branch ? "*" : " "} ${branch}`).join("\n")
+  };
+}
+
+function createBranch(state: GitState, branchName: string | undefined, shouldSwitch: boolean): CommandResult {
+  if (!branchName) {
+    return {
+      state,
+      output: "fatal: branch name required"
+    };
+  }
+
+  if (state.branches.includes(branchName)) {
+    return {
+      state,
+      output: `fatal: a branch named '${branchName}' already exists`
+    };
+  }
+
+  return {
+    state: {
+      ...state,
+      branch: shouldSwitch ? branchName : state.branch,
+      branches: [...state.branches, branchName],
+      branchHeads: {
+        ...state.branchHeads,
+        [branchName]: state.head
+      }
+    },
+    output: shouldSwitch ? `Switched to a new branch '${branchName}'` : `Created branch '${branchName}'`,
+    effect: shouldSwitch
+      ? {
+          type: "switch"
+        }
+      : undefined
+  };
+}
+
+function deleteBranch(state: GitState, branchName: string | undefined): CommandResult {
+  if (!branchName) {
+    return {
+      state,
+      output: "fatal: branch name required"
+    };
+  }
+
+  if (branchName === state.branch) {
+    return {
+      state,
+      output: `error: cannot delete branch '${branchName}' checked out at '/open-git'`
+    };
+  }
+
+  if (!state.branches.includes(branchName)) {
+    return {
+      state,
+      output: `error: branch '${branchName}' not found.`
+    };
+  }
+
+  const { [branchName]: _deletedHead, ...branchHeads } = state.branchHeads;
+  const { [branchName]: _deletedRemoteHead, ...remoteBranchHeads } = state.remoteBranchHeads;
+
+  return {
+    state: {
+      ...state,
+      branches: state.branches.filter((branch) => branch !== branchName),
+      branchHeads,
+      remoteBranchHeads
+    },
+    output: `Deleted branch ${branchName}.`
   };
 }
 
@@ -300,30 +384,8 @@ function switchBranch(state: GitState, args: string[]): CommandResult {
     return notARepository(state);
   }
 
-  if (args[0] === "-c") {
-    const branchName = args[1];
-    if (!branchName) {
-      return {
-        state,
-        output: "fatal: branch name required"
-      };
-    }
-
-    return {
-      state: {
-        ...state,
-        branch: branchName,
-        branches: state.branches.includes(branchName) ? state.branches : [...state.branches, branchName],
-        branchHeads: {
-          ...state.branchHeads,
-          [branchName]: state.branchHeads[branchName] ?? state.head
-        }
-      },
-      output: `Switched to a new branch '${branchName}'`,
-      effect: {
-        type: "switch"
-      }
-    };
+  if (args[0] === "-c" || args[0] === "-b") {
+    return createBranch(state, args[1], true);
   }
 
   const branchName = args[0];

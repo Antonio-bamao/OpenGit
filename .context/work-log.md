@@ -65,3 +65,10 @@
 - 结果：命令执行器、状态推导和 React 展示层分离；`main` 与 `feature/flow` 等分支会保留独立 head；分支图现在能展示 commit、HEAD、本地分支和远端引用。
 - 验证：先运行 `pnpm test src/lib/git-sim/git-simulator.test.ts src/lib/git-sim/git-graph-view-model.test.ts` 得到预期红灯；实现后 `pnpm test` 5 个测试文件、12 个测试全部通过；`pnpm lint` 无警告或错误；`http://localhost:3900/playground` 返回 200 且包含分支图和可视化面板。
 - 下一步：继续扩展场景任务内容、HEAD/引用动画细节，以及更完整的分支命令覆盖。
+
+## 2026-04-08 21:42｜扩展分支命令覆盖
+- 目标：扩展分支命令覆盖
+- 动作：按 TDD 为 git branch <name>、git branch -d、git checkout -b 和 git checkout <branch> 增加红灯测试；在 Git simulator 中拆分 branch 参数处理，复用 createBranch/switchBranch 逻辑，并清理删除分支时的本地与远端引用头。
+- 结果：模拟器现在支持创建但不切换分支、删除非当前分支，以及 checkout 兼容入口；未知命令提示同步包含 checkout。
+- 验证：先运行 pnpm test src/lib/git-sim/git-simulator.test.ts 看到 2 个预期失败；实现后该测试 9 个通过；随后 pnpm test 5 个测试文件 14 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续扩展场景任务内容和 HEAD/引用动画细节，或为分支删除/重复创建等边界行为补更多学习提示。
