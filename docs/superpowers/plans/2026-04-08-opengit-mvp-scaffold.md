@@ -30,25 +30,27 @@
 - Add: `OpenGit — 全局计划落地方案.md`
 - Add: `docs/superpowers/plans/2026-04-08-opengit-mvp-scaffold.md`
 
-- [ ] **Step 1: Check working tree**
+- [x] **Step 1: Check working tree**
 
 Run: `git status --short`
 
 Expected: only initial project files are untracked.
 
-- [ ] **Step 2: Stage baseline files**
+- [x] **Step 2: Stage baseline files**
 
 Run: `git add .context .gitignore README.md "OpenGit — 全局计划落地方案.md" docs/superpowers/plans/2026-04-08-opengit-mvp-scaffold.md`
 
 Expected: command exits with status 0.
 
-- [ ] **Step 3: Commit baseline**
+- [x] **Step 3: Commit baseline**
 
 Run: `git commit -m "chore: initialize opengit project context"`
 
 Expected: a root commit is created.
 
 ## Task 2: Scaffold Next.js App
+
+Status: skipped in favor of Task 3 manual scaffold, to keep the project pinned to Next.js 14 and avoid a `create-next-app@latest` version drift.
 
 **Files:**
 - Create: `package.json`
@@ -105,7 +107,7 @@ Use this task only if Task 2 generator cannot safely run in the non-empty direct
 - Create: `src/app/playground/page.tsx`
 - Create: `src/app/globals.css`
 
-- [ ] **Step 1: Create `package.json`**
+- [x] **Step 1: Create `package.json`**
 
 ```json
 {
@@ -135,7 +137,7 @@ Use this task only if Task 2 generator cannot safely run in the non-empty direct
 }
 ```
 
-- [ ] **Step 2: Create framework config files**
+- [x] **Step 2: Create framework config files**
 
 `next.config.mjs`:
 
@@ -213,7 +215,7 @@ const config: Config = {
 export default config;
 ```
 
-- [ ] **Step 3: Create app routes**
+- [x] **Step 3: Create app routes**
 
 `src/app/layout.tsx`:
 
@@ -330,13 +332,13 @@ body {
 }
 ```
 
-- [ ] **Step 4: Install dependencies**
+- [x] **Step 4: Install dependencies**
 
 Run: `pnpm install`
 
 Expected: dependencies install successfully and `pnpm-lock.yaml` is created.
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run: `pnpm lint`
 
@@ -354,7 +356,7 @@ Expected: production build exits with status 0.
 - Modify: `src/app/page.tsx`
 - Modify: `src/app/playground/page.tsx`
 
-- [ ] **Step 1: Create `AppHeader`**
+- [x] **Step 1: Create `AppHeader`**
 
 ```tsx
 import Link from "next/link";
@@ -384,7 +386,7 @@ export function AppHeader() {
 }
 ```
 
-- [ ] **Step 2: Create `PlaygroundShell`**
+- [x] **Step 2: Create `PlaygroundShell`**
 
 ```tsx
 const zones = ["工作目录", "暂存区", "本地仓库", "远程仓库"];
@@ -423,7 +425,7 @@ export function PlaygroundShell() {
 }
 ```
 
-- [ ] **Step 3: Use shared components in routes**
+- [x] **Step 3: Use shared components in routes**
 
 `src/app/page.tsx` should import `AppHeader` and render it above the landing section.
 
@@ -445,7 +447,7 @@ export default function PlaygroundPage() {
 }
 ```
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
 Run: `pnpm lint`
 

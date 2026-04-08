@@ -20,3 +20,33 @@
 - 解决方案：Reran the same git add and git commit command with approved elevated permissions
 - 预防措施：If git index writes fail with permission denied, retry the same git operation with explicit escalation rather than changing project files
 - 状态：Resolved
+
+## Scaffold files were written to the main worktree first
+
+- 现象：Next.js scaffold files and dependency artifacts were created in the primary project directory instead of `.worktrees/opengit-mvp-scaffold`.
+- 触发条件：Manual edits were applied with `apply_patch`, which operates from the shared workspace root unless paths are prefixed.
+- 影响：The primary `main` worktree became dirty and dependency cleanup was required before continuing isolated feature work.
+- 根因：The implementation plan was being executed in a nested worktree, but manual patch paths were not prefixed with `.worktrees/opengit-mvp-scaffold/`.
+- 解决方案：Copied the scaffold files into `.worktrees/opengit-mvp-scaffold`, removed the accidental root-level scaffold/dependency artifacts, and restored the primary README to the committed state.
+- 预防措施：When editing a nested worktree, prefix every manual patch path with `.worktrees/<branch>/` or avoid nested worktrees for future feature branches.
+- 状态：Resolved.
+
+## Next build spawn EPERM inside sandbox
+
+- 现象：`pnpm build` failed with `Error: spawn EPERM` while creating Next.js worker child processes.
+- 触发条件：Running `next build` inside the sandboxed command environment.
+- 影响：The first build verification failed even though lint passed.
+- 根因：The sandbox blocked child process spawning used by Next.js build workers.
+- 解决方案：Reran `pnpm build` with approved elevated permissions and the build completed successfully.
+- 预防措施：For Next.js build verification in this environment, use the approved `pnpm build` escalation path when `spawn EPERM` appears.
+- 状态：Resolved.
+
+## pnpm install required registry access
+
+- 现象：The first `pnpm install` failed with `ERR_PNPM_NO_OFFLINE_META` for `@types/node@20.17.10`.
+- 触发条件：Installing dependencies before the pnpm cache had metadata for the requested packages.
+- 影响：Dependency installation could not complete in offline/sandbox mode.
+- 根因：The local pnpm metadata cache did not contain the required package metadata.
+- 解决方案：Reran `pnpm install` with approved registry access; dependencies and lockfile were generated successfully.
+- 预防措施：For first-time dependency installation, expect registry access unless the exact package metadata already exists in cache.
+- 状态：Resolved.

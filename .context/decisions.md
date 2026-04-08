@@ -15,3 +15,10 @@
 - 决策：先初始化 git 仓库与 `.context/`，再做 Next.js 脚手架。
 - 理由：后续开发会跨多个模块，必须让计划、状态和变更记录保持可追踪。
 - 约束：每个重要实现步骤后更新 `work-log.md`，每次会话结束前更新 `current-status.md`。
+
+## 2026-04-08 - Next.js 14 使用最新 14.x 补丁版
+
+- 背景：原计划和 scaffold 计划使用 Next.js 14，但 `pnpm install` 警告 `next@14.2.23` 存在安全问题。
+- 决策：保持 Next.js 14 主版本约束，将 `next` 和 `eslint-config-next` 升级到 npm registry 中可用的 `14.2.35`。
+- 理由：满足项目指定的 Next.js 14 技术栈，同时避免已知有安全警告的旧补丁版本。
+- 约束：后续如果要升级 Next 15/16，需要作为单独技术决策记录，而不是跟随 `latest` 自动漂移。

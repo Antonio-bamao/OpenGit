@@ -14,3 +14,16 @@ The project currently starts from the product plan in `OpenGit — 全局计划�
 
 Plan and scaffold the MVP: a Next.js 14 App Router application focused on the interactive playground, terminal simulation, Git state model, and first visualization views.
 
+## Local Development
+
+```powershell
+pnpm install
+pnpm dev
+```
+
+Useful checks:
+
+```powershell
+pnpm lint
+pnpm build
+```
