@@ -17,3 +17,11 @@
 - 结果：应用骨架可 lint、可生产构建；`/` 和 `/playground` 均作为静态 App Router 页面生成。
 - 验证：`pnpm lint` 输出 `No ESLint warnings or errors`；`pnpm build` 在 `.worktrees/opengit-mvp-scaffold` 中完成并生成 `/`、`/_not-found`、`/playground` 静态页面。
 - 下一步：提交 scaffold 分支，然后规划 Phase 2 的 Git parser 与状态模型。
+
+## 2026-04-08 17:45 - 合并 scaffold 回根目录
+
+- 目标：消除不必要的 worktree 复杂度，让项目回到根目录直接开发。
+- 动作：将 `opengit-mvp-scaffold` 快进合并到 `main`；删除临时 worktree 和分支；清理 `.worktrees` 残留目录；在根目录重新安装依赖。
+- 结果：`C:\Users\m1591\Desktop\OpenGit` 现在就是 Next.js 项目根目录，`git worktree list` 只剩主目录。
+- 验证：根目录 `pnpm install` 成功；`pnpm lint` 输出 `No ESLint warnings or errors`；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`；`.context` 校验输出 `context is valid`。
+- 下一步：进入 Phase 2 的 Git parser 与状态模型。
