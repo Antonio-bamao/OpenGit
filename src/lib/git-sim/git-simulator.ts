@@ -48,7 +48,7 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前只覆盖 init、status、add、commit 和 log。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 init、status、add、commit 和 log。后续会逐步扩展更多 Git 命令。"
         }
       };
   }

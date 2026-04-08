@@ -33,3 +33,11 @@
 - 结果：MVP 现在支持 `git init`、`git status`、`git add .`、`git commit -m "..."`、`git log` 和未知命令提示。
 - 验证：先运行 `pnpm test` 得到模块缺失红灯；实现后 `pnpm test` 输出 2 个测试文件、4 个测试全部通过；`pnpm lint` 输出 `No ESLint warnings or errors`；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`。
 - 下一步：继续扩展 Git 命令覆盖和可视化动画。
+
+## 2026-04-08 18:15 - 重做浅色高级 UI 与 3D 首屏
+
+- 目标：根据用户反馈移除暗黑风格和生硬切入效果，提升首页与 Playground 的高级感和交互反馈。
+- 动作：使用 `ui-ux-pro-max` 查询设计方向后，按用户“不走暗黑”的约束落地浅色 graphite/emerald 方案；新增 CSS 3D Git 工作流首屏；加入渐显、位移、轻微浮动和流程线动画；增加 `prefers-reduced-motion` 保护；将 `/playground` 改成浅色工作台；修复 Git simulator 中文提示乱码。
+- 结果：首页首屏现在以 3D Git 流程空间作为核心视觉，Playground 不再是黑色终端框，命令输出、提示、状态区和文件列表都有更柔和的过渡反馈。
+- 验证：`pnpm lint` 无警告或错误；`pnpm test` 2 个测试文件、4 个测试全部通过；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`。
+- 下一步：继续做工作流动画和命令覆盖增强。

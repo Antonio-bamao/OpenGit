@@ -1,28 +1,62 @@
 import Link from "next/link";
+import { ThreeDGitIntro } from "@/components/home/ThreeDGitIntro";
 import { AppHeader } from "@/components/layout/AppHeader";
+
+const workflow = [
+  {
+    title: "先看见状态",
+    body: "工作区、暂存区、本地仓库和远端仓库并排呈现，命令执行后的变化会逐步浮现。"
+  },
+  {
+    title: "再输入命令",
+    body: "从 git init、git add、git commit 开始，逐步建立对 Git 数据流的直觉。"
+  },
+  {
+    title: "最后复盘历史",
+    body: "提交记录、HEAD 和分支状态会被保留下来，方便对照每一次操作。"
+  }
+];
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50">
+    <main className="min-h-screen bg-slate-50 text-slate-950">
       <AppHeader />
-      <section className="mx-auto flex max-w-5xl flex-col justify-center px-6 py-16 md:min-h-[calc(100vh-73px)]">
-        <p className="text-sm font-semibold uppercase text-cyan-300">OpenGit</p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight md:text-6xl">
-          在可操作的终端里学会 Git
-        </h1>
-        <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-          输入 Git 命令，实时观察工作目录、暂存区、本地仓库和远程仓库的状态变化。
-        </p>
-        <div className="mt-8">
+      <ThreeDGitIntro />
+
+      <section id="workflow" className="mx-auto max-w-7xl px-4 py-14 md:px-6">
+        <div className="motion-fade-up motion-delay-2 max-w-2xl">
+          <p className="text-sm font-semibold text-emerald-700">学习路径</p>
+          <h2 className="mt-3 text-3xl font-semibold text-slate-950 md:text-4xl">
+            从一条命令到一张结构图
+          </h2>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {workflow.map((item, index) => (
+            <article
+              key={item.title}
+              className={`motion-fade-up rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)] ${
+                index === 1 ? "motion-delay-1" : index === 2 ? "motion-delay-2" : ""
+              }`}
+            >
+              <p className="font-mono text-sm font-semibold text-emerald-700">
+                0{index + 1}
+              </p>
+              <h3 className="mt-4 text-xl font-semibold text-slate-950">{item.title}</h3>
+              <p className="mt-3 leading-7 text-slate-600">{item.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="motion-fade-up motion-delay-3 mt-10 flex">
           <Link
             href="/playground"
-            className="inline-flex rounded-lg bg-cyan-400 px-5 py-3 font-semibold text-slate-950 hover:bg-cyan-300"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
           >
-            进入 Playground
+            开始第一轮模拟
           </Link>
         </div>
       </section>
     </main>
   );
 }
-
