@@ -96,6 +96,7 @@ export function PlaygroundShell() {
           <LearningPathPanel
             activeTask={viewModel.activeTask}
             checklist={viewModel.learningChecklist}
+            scenario={viewModel.learningScenario}
             onFillCommand={setInput}
           />
           <RepositoryInsightPanel gitState={gitState} viewModel={viewModel} />

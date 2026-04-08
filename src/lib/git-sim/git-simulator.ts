@@ -58,15 +58,21 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
       return switchBranch(state, command.args);
     case "checkout":
       return switchBranch(state, command.args);
+    case "remote":
+      return showRemote(state, command.args);
     case "push":
       return pushCommits(state);
+    case "fetch":
+      return fetchCommits(state);
+    case "pull":
+      return pullCommits(state);
     default:
       return {
         state,
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前覆盖 init、status、add、commit、log、diff、restore、reset、branch、switch、checkout 和 push。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 init、status、add、commit、log、diff、restore、reset、branch、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
         }
       };
   }
@@ -438,6 +444,112 @@ function pushCommits(state: GitState): CommandResult {
       type: "push",
       from: "local",
       to: "remote"
+    }
+  };
+}
+
+function showRemote(state: GitState, args: string[]): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  if (args.includes("-v") || args.includes("--verbose")) {
+    return {
+      state,
+      output: "origin\t/open-git/origin.git (fetch)\norigin\t/open-git/origin.git (push)"
+    };
+  }
+
+  return {
+    state,
+    output: "origin"
+  };
+}
+
+function fetchCommits(state: GitState): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  if (Object.keys(state.remoteBranchHeads).length === 0) {
+    return {
+      state,
+      output: "From /open-git/origin\n * [up to date]      main       -> origin/main",
+      effect: {
+        type: "fetch",
+        from: "remote",
+        to: "local"
+      }
+    };
+  }
+
+  return {
+    state,
+    output: [
+      "From /open-git/origin",
+      ...Object.entries(state.remoteBranchHeads).map(
+        ([branch, hash]) => ` * [new ref]         ${hash ?? "empty"} -> origin/${branch}`
+      )
+    ].join("\n"),
+    effect: {
+      type: "fetch",
+      from: "remote",
+      to: "local"
+    }
+  };
+}
+
+function pullCommits(state: GitState): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  const remoteHead = state.remoteBranchHeads[state.branch];
+  if (!remoteHead || remoteHead === state.head) {
+    return {
+      state,
+      output: "Already up to date.",
+      effect: {
+        type: "fetch",
+        from: "remote",
+        to: "local"
+      }
+    };
+  }
+
+  const remoteCommit = state.remoteCommits.find((commit) => commit.hash === remoteHead);
+  if (!remoteCommit) {
+    return {
+      state,
+      output: `fatal: origin/${state.branch} points to an unknown commit in this simulation`
+    };
+  }
+
+  if (remoteCommit.parentHash !== state.head) {
+    return {
+      state,
+      output: "fatal: non-fast-forward pull is not simulated yet. Try a branch with a linear remote update."
+    };
+  }
+
+  const commits = dedupeCommits([{ ...remoteCommit, files: [...remoteCommit.files] }, ...state.commits]);
+
+  return {
+    state: {
+      ...state,
+      head: remoteHead,
+      branchHeads: {
+        ...state.branchHeads,
+        [state.branch]: remoteHead
+      },
+      commits
+    },
+    output: `From /open-git/origin\nFast-forward ${state.head}..${remoteHead}\n ${remoteCommit.files.length} ${pluralize("file", remoteCommit.files.length)} changed`,
+    effect: {
+      type: "pull",
+      from: "remote",
+      to: "local",
+      filePaths: remoteCommit.files
     }
   };
 }

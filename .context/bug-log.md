@@ -70,3 +70,12 @@
 - 解决方案：停止坏掉的 dev 进程，删除 `.next` 缓存，重新运行 `pnpm dev`；后续开发阶段只跑 `pnpm test`、`pnpm lint` 和 HTTP 检查。
 - 预防措施：需要生产构建验证时，先停止 `pnpm dev`；不要在热更新服务运行时执行 `pnpm build`。
 - 状态：Resolved.
+
+## 2026-04-08 - Set spread breaks Next build under ES5 target
+- 现象：pnpm build 在 playground-view-model.ts 的 Set 展开表达式处类型检查失败。
+- 触发条件：为 ahead/behind 同步状态派生逻辑使用 [...localReachable] 和 [...remoteReachable] 展开 Set。
+- 影响：Vitest 通过但 Next production build 失败，无法确认生产构建健康。
+- 根因：项目 tsconfig target 仍为 es5，未开启 downlevelIteration，TypeScript 不允许直接迭代 Set。
+- 解决方案：将 Set 展开改为 Array.from(set)，保留派生逻辑并兼容当前编译目标。
+- 预防措施：在新增 Set/Map 迭代写法后必须运行 pnpm build；优先使用 Array.from 以兼容当前 tsconfig。
+- 状态：fixed

@@ -46,7 +46,7 @@ export interface CommandResult {
 
 export type GitFlowZone = "working" | "staging" | "local" | "remote";
 
-export type GitFlowEffectType = "stage" | "unstage" | "commit" | "push" | "switch";
+export type GitFlowEffectType = "stage" | "unstage" | "commit" | "push" | "pull" | "fetch" | "switch";
 
 export interface GitFlowEffect {
   type: GitFlowEffectType;

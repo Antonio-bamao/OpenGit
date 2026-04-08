@@ -1,5 +1,5 @@
-import { getLearningChecklist, type LearningChecklistItem } from "./learning-guide";
-import type { GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
+import { getSoloProjectScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
+import type { GitCommit, GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
 
 export const flowZones = [
   { key: "working", label: "工作区", description: "尚未暂存的文件" },
@@ -32,6 +32,15 @@ export interface FlowItem {
   status: GitFileStatus;
 }
 
+export interface BranchSyncStatus {
+  branchLabel: string;
+  localHead: string;
+  remoteHead: string;
+  ahead: number;
+  behind: number;
+  summary: string;
+}
+
 export type ZoneCounts = Record<GitFlowZone, number>;
 
 export type FlowItemsByZone = Record<GitFlowZone, FlowItem[]>;
@@ -39,10 +48,12 @@ export type FlowItemsByZone = Record<GitFlowZone, FlowItem[]>;
 export interface PlaygroundViewModel {
   zoneCounts: ZoneCounts;
   flowItems: FlowItemsByZone;
+  learningScenario: LearningScenario;
   learningChecklist: LearningChecklistItem[];
   activeTask: LearningChecklistItem | undefined;
   headCommit: string;
   remoteHead: string;
+  syncStatus: BranchSyncStatus;
   isFlowActive: (from: GitFlowZone, to: GitFlowZone) => boolean;
 }
 
@@ -54,7 +65,9 @@ export function buildPlaygroundViewModel(
     (file) => file.status === "untracked" || file.status === "modified"
   );
   const stagedFiles = gitState.files.filter((file) => file.status === "staged");
-  const learningChecklist = getLearningChecklist(gitState);
+  const learningScenario = getSoloProjectScenario(gitState);
+  const learningChecklist = learningScenario.checklist;
+  const syncStatus = buildBranchSyncStatus(gitState);
 
   return {
     zoneCounts: {
@@ -89,12 +102,81 @@ export function buildPlaygroundViewModel(
         status: "tracked"
       }))
     },
+    learningScenario,
     learningChecklist,
-    activeTask: learningChecklist.find((item) => !item.completed),
+    activeTask: learningScenario.activeTask,
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
+    syncStatus,
     isFlowActive: (from, to) =>
       (latestEffect?.from === from && latestEffect.to === to) ||
       (latestEffect?.from === to && latestEffect.to === from)
   };
+}
+
+function buildBranchSyncStatus(gitState: GitState): BranchSyncStatus {
+  const remoteHead = gitState.remoteBranchHeads[gitState.branch] ?? null;
+
+  if (!remoteHead) {
+    return {
+      branchLabel: `${gitState.branch} ↔ origin/${gitState.branch}`,
+      localHead: gitState.head ?? "no commits",
+      remoteHead: "not pushed",
+      ahead: gitState.head ? countReachableCommits(gitState.commits, gitState.head) : 0,
+      behind: 0,
+      summary: "no remote"
+    };
+  }
+
+  const localReachable = collectReachableHashes(gitState.commits, gitState.head);
+  const remoteReachable = collectReachableHashes(gitState.remoteCommits, remoteHead);
+  const ahead = Array.from(localReachable).filter((hash) => !remoteReachable.has(hash)).length;
+  const behind = Array.from(remoteReachable).filter((hash) => !localReachable.has(hash)).length;
+
+  return {
+    branchLabel: `${gitState.branch} ↔ origin/${gitState.branch}`,
+    localHead: gitState.head ?? "no commits",
+    remoteHead,
+    ahead,
+    behind,
+    summary: formatSyncSummary(ahead, behind)
+  };
+}
+
+function collectReachableHashes(commits: GitCommit[], startHash: string | null): Set<string> {
+  const commitsByHash = new Map(commits.map((commit) => [commit.hash, commit]));
+  const hashes = new Set<string>();
+  let cursor = startHash;
+
+  while (cursor && !hashes.has(cursor)) {
+    const commit = commitsByHash.get(cursor);
+    if (!commit) {
+      break;
+    }
+
+    hashes.add(cursor);
+    cursor = commit.parentHash;
+  }
+
+  return hashes;
+}
+
+function countReachableCommits(commits: GitCommit[], startHash: string): number {
+  return collectReachableHashes(commits, startHash).size;
+}
+
+function formatSyncSummary(ahead: number, behind: number): string {
+  if (ahead === 0 && behind === 0) {
+    return "up to date";
+  }
+
+  if (ahead > 0 && behind > 0) {
+    return `ahead ${ahead} / behind ${behind}`;
+  }
+
+  if (ahead > 0) {
+    return `ahead ${ahead}`;
+  }
+
+  return `behind ${behind}`;
 }

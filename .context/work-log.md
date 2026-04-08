@@ -72,3 +72,24 @@
 - 结果：模拟器现在支持创建但不切换分支、删除非当前分支，以及 checkout 兼容入口；未知命令提示同步包含 checkout。
 - 验证：先运行 pnpm test src/lib/git-sim/git-simulator.test.ts 看到 2 个预期失败；实现后该测试 9 个通过；随后 pnpm test 5 个测试文件 14 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
 - 下一步：继续扩展场景任务内容和 HEAD/引用动画细节，或为分支删除/重复创建等边界行为补更多学习提示。
+
+## 2026-04-08 22:11｜扩展 MVP 场景任务内容
+- 目标：扩展 MVP 场景任务内容
+- 动作：结合全局方案中的真实项目模拟场景一和最新日志，将现有任务路线升级为 getSoloProjectScenario 纯函数模型；为场景标题、目标、验收条件、进度和当前任务写红灯测试；将 Playground view model 与 LearningPathPanel 接入场景信息。
+- 结果：Playground 右侧任务路线现在以“从零开始个人项目”呈现，包含目标、验收、进度和每一步的目的说明，同时仍保留“填入下一步”命令流。
+- 验证：先运行 pnpm test src/lib/git-sim/learning-guide.test.ts 得到 getSoloProjectScenario 缺失红灯；实现后该测试通过；聚焦测试在沙箱中遇到 spawn EPERM 后按权限重跑通过；随后 pnpm test 5 个测试文件 15 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续打磨 HEAD/引用动画细节，或扩展更多基础远端命令如 git remote、git fetch、git pull，为后续场景二团队协作做铺垫。
+
+## 2026-04-08 22:17｜扩展基础远端命令模拟
+- 目标：扩展基础远端命令模拟
+- 动作：按 TDD 为 git remote -v、git fetch 和 git pull 增加红灯测试；在 Git simulator 中接入 remote/fetch/pull 命令分发；为虚拟 origin 远端输出 URL；让 fetch 产生远端到本地的 flow effect；让 pull 支持线性 fast-forward，将 origin/<branch> 的远端提交同步为当前本地分支 HEAD。
+- 结果：MVP 现在支持基础远端查看、fetch 引用同步反馈和 pull fast-forward，为后续“加入团队项目”场景铺垫。
+- 验证：先运行 pnpm test src/lib/git-sim/git-simulator.test.ts 看到 remote 和 pull 两个预期失败；实现后该测试 11 个通过；随后 pnpm test 5 个测试文件 17 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续为团队协作场景增加 clone/remote branch 展示，或转向 HEAD/引用动画细节，让 pull/fetch 的指针移动在 UI 中更直观。
+
+## 2026-04-08 22:23｜展示分支与远端同步状态
+- 目标：展示分支与远端同步状态
+- 动作：按 TDD 为 Playground view model 增加 syncStatus 红灯测试；沿 commit parent 链计算当前分支相对 origin/<branch> 的 ahead/behind；在仓库洞察面板 Remote 区和引用指针标签中展示同步摘要、分支映射、ahead 和 behind；修复 Next build 暴露的 Set 展开与 es5 target 不兼容问题，并记录 bug-log。
+- 结果：Playground 现在能在仓库状态区显示 no remote、up to date、ahead N、behind N 或 ahead N / behind N，让 fetch/pull/push 后的本地与远端关系更直观。
+- 验证：先运行 pnpm test src/lib/git-sim/playground-view-model.test.ts 看到 syncStatus 缺失红灯；实现后该测试 2 个通过；pnpm build 首次暴露 Set 展开与 es5 target 不兼容，改为 Array.from 后通过；最终 pnpm test 5 个测试文件 18 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续做 clone/remote branch 展示，或把 ahead/behind 与 HEAD/origin 指针移动做成更明显的视觉反馈。

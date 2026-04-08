@@ -26,7 +26,7 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
         </div>
         <div className="border-t border-slate-200 p-3 sm:border-l sm:border-t-0">
           <dt className="text-xs font-semibold text-slate-500">Remote</dt>
-          <dd className="mt-1 font-mono text-slate-950">{gitState.remoteCommits.length} commits</dd>
+          <dd className="mt-1 font-mono text-slate-950">{viewModel.syncStatus.summary}</dd>
         </div>
       </dl>
 
@@ -49,6 +49,15 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
+          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+            {viewModel.syncStatus.branchLabel}
+          </span>
+          <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
+            ahead {viewModel.syncStatus.ahead}
+          </span>
+          <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
+            behind {viewModel.syncStatus.behind}
+          </span>
           {gitState.branches.map((branch) => (
             <span
               key={branch}

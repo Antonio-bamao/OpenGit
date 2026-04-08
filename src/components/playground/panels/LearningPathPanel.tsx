@@ -1,16 +1,23 @@
-import type { LearningChecklistItem } from "@/lib/git-sim/learning-guide";
+import type { LearningChecklistItem, LearningScenario } from "@/lib/git-sim/learning-guide";
 
 interface LearningPathPanelProps {
   activeTask?: LearningChecklistItem;
   checklist: LearningChecklistItem[];
+  scenario: LearningScenario;
   onFillCommand: (command: string) => void;
 }
 
-export function LearningPathPanel({ activeTask, checklist, onFillCommand }: LearningPathPanelProps) {
+export function LearningPathPanel({ activeTask, checklist, scenario, onFillCommand }: LearningPathPanelProps) {
   return (
     <div className="mb-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-emerald-700">任务路线</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-emerald-700">{scenario.title}</p>
+          <p className="mt-1 max-w-2xl text-sm text-slate-600">{scenario.summary}</p>
+          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            进度 {scenario.progressLabel}
+          </p>
+        </div>
         {activeTask ? (
           <button
             type="button"
@@ -20,6 +27,16 @@ export function LearningPathPanel({ activeTask, checklist, onFillCommand }: Lear
             填入下一步
           </button>
         ) : null}
+      </div>
+      <div className="mt-3 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 sm:grid-cols-2">
+        <p>
+          <span className="font-semibold text-slate-950">目标：</span>
+          {scenario.objective}
+        </p>
+        <p>
+          <span className="font-semibold text-slate-950">验收：</span>
+          {scenario.successCriteria}
+        </p>
       </div>
       <ol className="mt-3 grid gap-2 sm:grid-cols-5">
         {checklist.map((item, index) => (
@@ -36,6 +53,7 @@ export function LearningPathPanel({ activeTask, checklist, onFillCommand }: Lear
             <p className="font-mono font-semibold">{String(index + 1).padStart(2, "0")}</p>
             <p className="mt-2 font-semibold">{item.title}</p>
             <p className="mt-2 truncate font-mono opacity-75">{item.command}</p>
+            <p className="mt-2 text-[11px] leading-4 opacity-75">{item.goal}</p>
           </li>
         ))}
       </ol>

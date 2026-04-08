@@ -167,4 +167,53 @@ describe("executeGitCommand", () => {
     expect(result.state.remoteCommits).toHaveLength(1);
     expect(result.state.remoteCommits[0]?.hash).toBe(state.commits[0]?.hash);
   });
+
+  it("lists origin after push and fetches remote refs", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add .").state;
+    state = executeGitCommand(state, 'git commit -m "first commit"').state;
+    state = executeGitCommand(state, "git push").state;
+
+    let result = executeGitCommand(state, "git remote -v");
+    expect(result.output).toContain("origin");
+    expect(result.output).toContain("/open-git/origin.git");
+
+    result = executeGitCommand(state, "git fetch");
+    state = result.state;
+
+    expect(result.output).toContain("From /open-git/origin");
+    expect(result.effect?.type).toBe("fetch");
+    expect(state.remoteBranchHeads.main).toBe("c000001");
+  });
+
+  it("pulls a remote commit into the current branch", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "local base"').state;
+    state = executeGitCommand(state, "git push").state;
+
+    const remoteCommit = {
+      hash: "c000002",
+      message: "teammate update",
+      files: ["README.md"],
+      branch: "main",
+      parentHash: "c000001"
+    };
+    state = {
+      ...state,
+      remoteCommits: [remoteCommit, ...state.remoteCommits],
+      remoteBranchHeads: {
+        ...state.remoteBranchHeads,
+        main: remoteCommit.hash
+      }
+    };
+
+    const result = executeGitCommand(state, "git pull");
+
+    expect(result.output).toContain("Fast-forward");
+    expect(result.effect?.type).toBe("pull");
+    expect(result.state.head).toBe("c000002");
+    expect(result.state.branchHeads.main).toBe("c000002");
+    expect(result.state.commits[0]?.message).toBe("teammate update");
+  });
 });
