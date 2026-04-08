@@ -11,6 +11,7 @@
   --line: #dbe3ef;
   --accent: #047857;
   --accent-soft: #d1fae5;
+  --git-orange: #f05133;
 }
 
 * {
@@ -76,6 +77,10 @@ a {
   animation: soft-pulse 2.4s ease-in-out infinite;
 }
 
+.typewriter-caret {
+  animation: caret-blink 880ms steps(1, end) infinite;
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -127,6 +132,17 @@ a {
   50% {
     transform: scale(1.08);
     opacity: 1;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  49%,
+  100% {
+    opacity: 0;
   }
 }
 
