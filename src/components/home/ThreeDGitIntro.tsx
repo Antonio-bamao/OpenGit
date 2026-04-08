@@ -19,7 +19,7 @@ export function ThreeDGitIntro() {
             OpenGit Playground
           </p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-slate-950 md:text-6xl">
-            把 Git 变成可以触摸的空间
+            把 <span className="text-[#F05133]">Git</span> 变成可以触摸的空间
           </h1>
           <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 md:text-lg">
             输入命令，观察文件从工作区进入暂存区，再沉淀为提交历史。每一步都有状态反馈，不再靠死记硬背。
