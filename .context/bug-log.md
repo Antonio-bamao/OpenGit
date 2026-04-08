@@ -50,3 +50,13 @@
 - 解决方案：Reran `pnpm install` with approved registry access; dependencies and lockfile were generated successfully.
 - 预防措施：For first-time dependency installation, expect registry access unless the exact package metadata already exists in cache.
 - 状态：Resolved.
+
+## Vitest spawn EPERM inside sandbox
+
+- 现象：The first `pnpm test` run failed before collecting tests with `Error: spawn EPERM`.
+- 触发条件：Running Vitest/Vite inside the sandboxed command environment on Windows.
+- 影响：The first TDD red run did not reach the expected missing-module failure.
+- 根因：Vite/Vitest attempted to spawn child processes for path resolution or workers, and the sandbox blocked that process creation.
+- 解决方案：Reran `pnpm test` with approved elevated permissions; the expected red failure then appeared because `command-parser` and `git-simulator` did not exist yet.
+- 预防措施：Use the approved `pnpm test` path when Vitest reports `spawn EPERM` in this environment.
+- 状态：Resolved.

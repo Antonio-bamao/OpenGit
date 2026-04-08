@@ -25,3 +25,11 @@
 - 结果：`C:\Users\m1591\Desktop\OpenGit` 现在就是 Next.js 项目根目录，`git worktree list` 只剩主目录。
 - 验证：根目录 `pnpm install` 成功；`pnpm lint` 输出 `No ESLint warnings or errors`；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`；`.context` 校验输出 `context is valid`。
 - 下一步：进入 Phase 2 的 Git parser 与状态模型。
+
+## 2026-04-08 17:55 - 实现 Playground 核心交互
+
+- 目标：让 `/playground` 从静态布局变成可输入基础 Git 命令的模拟终端。
+- 动作：加入 Vitest；先写 parser 与 simulator 的失败测试；实现 `parseGitCommand`、`createInitialGitState`、`executeGitCommand`；将 `PlaygroundShell` 改为 client component，支持命令输入、历史导航、重置、终端输出、提示卡片、四区状态计数和文件状态列表。
+- 结果：MVP 现在支持 `git init`、`git status`、`git add .`、`git commit -m "..."`、`git log` 和未知命令提示。
+- 验证：先运行 `pnpm test` 得到模块缺失红灯；实现后 `pnpm test` 输出 2 个测试文件、4 个测试全部通过；`pnpm lint` 输出 `No ESLint warnings or errors`；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`。
+- 下一步：继续扩展 Git 命令覆盖和可视化动画。
