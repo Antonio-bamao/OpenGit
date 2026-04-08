@@ -12,7 +12,11 @@ const commands = [
 
 type TypingPhase = "typing" | "holding" | "deleting";
 
-export function GitCommandTypewriter() {
+interface GitCommandTypewriterProps {
+  className?: string;
+}
+
+export function GitCommandTypewriter({ className = "" }: GitCommandTypewriterProps) {
   const [commandIndex, setCommandIndex] = useState(0);
   const [displayed, setDisplayed] = useState("");
   const [phase, setPhase] = useState<TypingPhase>("typing");
@@ -55,7 +59,9 @@ export function GitCommandTypewriter() {
   }, [commandIndex, displayed, phase]);
 
   return (
-    <div className="motion-fade-up motion-delay-1 mt-6 max-w-xl rounded-lg border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.10)] backdrop-blur">
+    <div
+      className={`motion-fade-up motion-delay-1 w-full max-w-xl rounded-lg border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.10)] backdrop-blur ${className}`}
+    >
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-2">
         <p className="text-xs font-semibold text-slate-500">常用命令</p>
         <div className="flex gap-1.5" aria-hidden="true">
