@@ -1,7 +1,13 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { PlaygroundShell } from "@/components/playground/PlaygroundShell";
 
-export default function PlaygroundPage() {
+interface PlaygroundPageProps {
+  searchParams?: {
+    command?: string;
+  };
+}
+
+export default function PlaygroundPage({ searchParams }: PlaygroundPageProps) {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <AppHeader />
@@ -15,7 +21,7 @@ export default function PlaygroundPage() {
             先试试 git init，再执行 git add . 和 git commit -m &quot;first commit&quot;。
           </p>
         </div>
-        <PlaygroundShell />
+        <PlaygroundShell initialCommand={searchParams?.command ?? ""} />
       </div>
     </main>
   );

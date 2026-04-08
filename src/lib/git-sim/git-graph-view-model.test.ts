@@ -27,4 +27,22 @@ describe("buildGitGraphViewModel", () => {
     expect(graph.nodes[1]?.refs).toEqual(["main"]);
     expect(graph.currentBranch).toBe("feature/flow");
   });
+
+  it("marks remote refs touched by the latest graph-moving command", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+    state = executeGitCommand(state, "git switch -c feature/flow").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "feature work"').state;
+
+    const pushResult = executeGitCommand(state, "git push");
+    const graph = buildGitGraphViewModel(pushResult.state, pushResult.effect);
+    const featureNode = graph.nodes.find((node) => node.remoteRefs.includes("origin/feature/flow"));
+
+    expect(featureNode).toMatchObject({
+      hash: "c000002",
+      activeRemoteRefs: ["origin/feature/flow"]
+    });
+  });
 });

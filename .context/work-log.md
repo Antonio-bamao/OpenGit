@@ -93,3 +93,45 @@
 - 结果：Playground 现在能在仓库状态区显示 no remote、up to date、ahead N、behind N 或 ahead N / behind N，让 fetch/pull/push 后的本地与远端关系更直观。
 - 验证：先运行 pnpm test src/lib/git-sim/playground-view-model.test.ts 看到 syncStatus 缺失红灯；实现后该测试 2 个通过；pnpm build 首次暴露 Set 展开与 es5 target 不兼容，改为 Array.from 后通过；最终 pnpm test 5 个测试文件 18 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
 - 下一步：继续做 clone/remote branch 展示，或把 ahead/behind 与 HEAD/origin 指针移动做成更明显的视觉反馈。
+
+## 2026-04-08 22:28｜增加 git clone 团队项目入口
+- 目标：增加 git clone 团队项目入口
+- 动作：按 TDD 为 git clone <url> 增加红灯测试；在 Git simulator 中实现虚拟 origin clone，把 main、HEAD、origin/main、初始提交和 tracked 文件一次性带到本地；新增 clone flow effect；更新 Playground 欢迎提示，让用户能从 clone 进入团队项目练习。
+- 结果：MVP 现在支持 git clone https://github.com/opengit/example.git，clone 后本地与远端引用处于 up to date 状态，并能继续执行 branch/fetch/pull 等团队协作前置命令。
+- 验证：先运行 pnpm test src/lib/git-sim/git-simulator.test.ts 看到 clone 未支持的预期红灯；实现后该测试 12 个通过；随后 pnpm test 5 个测试文件 19 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续补 remote branch 展示或设计团队协作场景的轻量任务模型：clone -> switch -c feature -> commit -> push。
+
+## 2026-04-08 22:34｜增加团队协作轻量任务路线
+- 目标：增加团队协作轻量任务路线
+- 动作：按 TDD 为 getTeamCollaborationScenario 和 getActiveLearningScenario 增加红灯测试；实现“加入团队项目”场景：clone、switch -c feature/team-work、commit、push；让 Playground view model 在 clone 后自动切换到团队协作场景，并补充集成断言。
+- 结果：Playground 现在会在 clone 后从“从零开始个人项目”自动切换到“加入团队项目”，任务路线引导用户创建 feature 分支、提交协作改动并推送到 origin。
+- 验证：先运行 pnpm test src/lib/git-sim/learning-guide.test.ts 看到 getTeamCollaborationScenario/getActiveLearningScenario 缺失红灯；实现后聚焦测试通过；最终 pnpm test 5 个测试文件 22 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：继续补 remote branch 展示，或开始做 /scenarios 的轻量入口页面，让用户显式选择“个人项目”和“加入团队项目”。
+
+## 2026-04-08 22:39｜展示远端分支列表
+- 目标：展示远端分支列表
+- 动作：按 TDD 为 Playground view model 增加 remoteRefs 红灯测试；从 remoteBranchHeads 派生 origin/<branch>、目标 commit 和当前分支标记；在仓库洞察面板的引用指针区域新增远端分支列表。
+- 结果：Playground 现在能在 clone 后显示 origin/main，并在 feature 分支 push 后同时显示 origin/feature/team-work 和 origin/main，当前远端分支会高亮。
+- 验证：先运行 pnpm test src/lib/git-sim/playground-view-model.test.ts 看到 remoteRefs 缺失红灯；实现后该测试 3 个通过；随后 pnpm test 5 个测试文件 22 个测试通过，pnpm lint 无警告或错误，pnpm build 成功，validate_context.py 输出 context is valid。
+- 下一步：可以开始做 /scenarios 轻量入口页面，让用户显式选择“个人项目”和“加入团队项目”，或继续增强 Git Graph 的远端分支视觉。
+
+## 2026-04-08 22:51｜新增场景入口页并串联 Playground
+- 目标：新增场景入口页并串联 Playground
+- 动作：按 TDD 增加 scenario-catalog 红灯测试；实现六个全局计划场景的 catalog；新增 /scenarios 页面；在 AppHeader 与首页 CTA 接入场景入口；让 /playground 读取 command 查询参数并传给 PlaygroundShell 预填命令；保留 reset 后的场景命令预填。
+- 结果：应用现在有独立的场景选择入口，前两个可练习场景能直接跳转到 Playground 并填入 git init 或 git clone 命令，后续四个全局计划场景以 planned 状态展示。
+- 验证：pnpm test src/lib/git-sim/scenario-catalog.test.ts 通过 1 个测试文件 2 个测试；pnpm test 通过 6 个测试文件 24 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功生成 /、/scenarios，并让 /playground 动态渲染以支持查询参数。
+- 下一步：继续按全局计划做更大块推进：为场景入口增加可加载的初始仓库状态/场景状态，或扩展 Git Graph 的远端分支与 HEAD 动画反馈。
+
+## 2026-04-09 03:59｜增强 Git Graph 的远端引用视觉反馈
+- 目标：增强 Git Graph 的远端引用视觉反馈
+- 动作：按 TDD 为 git-graph-view-model 增加 push 后活跃远端引用高亮的红灯测试；让 buildGitGraphViewModel 接收最新 effect，并派生活跃 HEAD、本地引用和远端引用；在 GitGraphPanel 中为刚移动的 HEAD、本地 ref 和 origin ref 增加更强的视觉高亮；在 PlaygroundShell 中把最近一次 effect 传给 graph view model。
+- 结果：提交图现在不只是静态显示 branch/origin 标签，还能在 clone、commit、switch、pull、push 后把刚刚移动的指针高亮出来，用户更容易把命令和引用移动对应起来。
+- 验证：pnpm test src/lib/git-sim/git-graph-view-model.test.ts 通过 1 个测试文件 2 个测试；pnpm test 通过 6 个测试文件 25 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功生成 /、/scenarios 和 /playground。
+- 下一步：继续按全局计划做场景闭环：为场景入口增加可加载的初始仓库状态/任务状态，或扩展 conflict/revert/tag/worktree 的命令模拟。
+
+## 2026-04-09 04:50｜修复 Next dev 与 build 共享 distDir 导致的 chunk 错配
+- 目标：修复 Next dev 与 build 共享 distDir 导致的 chunk 错配
+- 动作：按 systematic-debugging 复现 3900 上的 500，读取 .next/server/webpack-runtime.js、app/page.js 和 chunk 布局，确认现有 dev 进程在找 ./987.js 而实际 chunk 在 chunks/987.js；定位根因为 next dev 与 next build 共用 .next，构建验证把正在运行的 dev 产物踩坏；按 TDD 新增 getNextDistDir 回归测试，并在 next.config.mjs 中把 dev/build 输出拆为 .next-dev 与 .next-build；用隔离的 next dev -p 3100 验证新配置。
+- 结果：后续开发中 next build 不会再破坏正在运行的 next dev；当前仓库同时保留 .next-dev 和 .next-build，临时 3100 实例返回 200，说明新的开发输出目录工作正常。
+- 验证：curl.exe -i http://127.0.0.1:3900/ 复现 500 并返回 Cannot find module ./987.js；pnpm test src/lib/next-dist-dir.test.ts 通过 1 个测试文件 2 个测试；pnpm test 通过 7 个测试文件 27 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功并生成 .next-build；隔离 next dev -p 3100 返回 HTTP 200。
+- 下一步：重启当前 3900 上的旧 dev 进程使其加载新配置，然后继续推进场景初始仓库状态或 conflict/revert/tag/worktree 命令模拟。

@@ -1,4 +1,4 @@
-import { getSoloProjectScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
+import { getActiveLearningScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
 import type { GitCommit, GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
 
 export const flowZones = [
@@ -41,6 +41,13 @@ export interface BranchSyncStatus {
   summary: string;
 }
 
+export interface RemoteRefViewModel {
+  name: string;
+  branch: string;
+  target: string;
+  isCurrentBranch: boolean;
+}
+
 export type ZoneCounts = Record<GitFlowZone, number>;
 
 export type FlowItemsByZone = Record<GitFlowZone, FlowItem[]>;
@@ -54,6 +61,7 @@ export interface PlaygroundViewModel {
   headCommit: string;
   remoteHead: string;
   syncStatus: BranchSyncStatus;
+  remoteRefs: RemoteRefViewModel[];
   isFlowActive: (from: GitFlowZone, to: GitFlowZone) => boolean;
 }
 
@@ -65,9 +73,10 @@ export function buildPlaygroundViewModel(
     (file) => file.status === "untracked" || file.status === "modified"
   );
   const stagedFiles = gitState.files.filter((file) => file.status === "staged");
-  const learningScenario = getSoloProjectScenario(gitState);
+  const learningScenario = getActiveLearningScenario(gitState);
   const learningChecklist = learningScenario.checklist;
   const syncStatus = buildBranchSyncStatus(gitState);
+  const remoteRefs = buildRemoteRefs(gitState);
 
   return {
     zoneCounts: {
@@ -108,10 +117,28 @@ export function buildPlaygroundViewModel(
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
     syncStatus,
+    remoteRefs,
     isFlowActive: (from, to) =>
       (latestEffect?.from === from && latestEffect.to === to) ||
       (latestEffect?.from === to && latestEffect.to === from)
   };
+}
+
+function buildRemoteRefs(gitState: GitState): RemoteRefViewModel[] {
+  return Object.entries(gitState.remoteBranchHeads)
+    .map(([branch, target]) => ({
+      name: `origin/${branch}`,
+      branch,
+      target: target ?? "empty",
+      isCurrentBranch: branch === gitState.branch
+    }))
+    .sort((left, right) => {
+      if (left.isCurrentBranch !== right.isCurrentBranch) {
+        return left.isCurrentBranch ? -1 : 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
 }
 
 function buildBranchSyncStatus(gitState: GitState): BranchSyncStatus {

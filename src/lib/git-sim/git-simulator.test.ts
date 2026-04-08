@@ -37,6 +37,24 @@ describe("executeGitCommand", () => {
     expect(result.hint?.body).toContain("OpenGit MVP");
   });
 
+  it("clones a virtual origin repository into a clean workspace", () => {
+    const result = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    );
+
+    expect(result.output).toContain("Cloning into 'example'");
+    expect(result.effect?.type).toBe("clone");
+    expect(result.state.initialized).toBe(true);
+    expect(result.state.branch).toBe("main");
+    expect(result.state.head).toBe("c000001");
+    expect(result.state.branchHeads.main).toBe("c000001");
+    expect(result.state.remoteBranchHeads.main).toBe("c000001");
+    expect(result.state.commits[0]?.message).toContain("Clone from https://github.com/opengit/example.git");
+    expect(result.state.remoteCommits[0]?.hash).toBe("c000001");
+    expect(result.state.files.every((file) => file.status === "tracked")).toBe(true);
+  });
+
   it("unstages files with restore --staged and reset", () => {
     let state = executeGitCommand(createInitialGitState(), "git init").state;
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const links = [
   { href: "/", label: "首页" },
+  { href: "/scenarios", label: "场景" },
   { href: "/playground", label: "Playground" }
 ];
 

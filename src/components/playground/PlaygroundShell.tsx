@@ -11,11 +11,18 @@ import { GitWorkflowPanel } from "./panels/GitWorkflowPanel";
 import { LearningPathPanel } from "./panels/LearningPathPanel";
 import { RepositoryInsightPanel } from "./panels/RepositoryInsightPanel";
 
-function createWelcomeEntry(): CommandResult {
+interface PlaygroundShellProps {
+  initialCommand?: string;
+}
+
+function createWelcomeEntry(initialCommand = ""): CommandResult {
+  const trimmedCommand = initialCommand.trim();
+
   return {
     state: createInitialGitState(),
-    output:
-      "输入 git init 开始。随后试试 git status、git add .、git commit -m \"first commit\"、git diff --staged、git push。",
+    output: trimmedCommand
+      ? `已填入 ${trimmedCommand}，按 Enter 运行后继续跟随任务路线。`
+      : "输入 git init 开始个人项目，或试试 git clone https://github.com/opengit/example.git 加入团队项目。随后可以运行 git status、git branch、git fetch、git pull。",
     hint: {
       title: "Playground 已就绪",
       body: "这里先用可控 Git 状态模型模拟基础命令，帮助你把命令和仓库结构对应起来。"
@@ -23,10 +30,10 @@ function createWelcomeEntry(): CommandResult {
   };
 }
 
-export function PlaygroundShell() {
+export function PlaygroundShell({ initialCommand = "" }: PlaygroundShellProps) {
   const [gitState, setGitState] = useState(createInitialGitState);
-  const [input, setInput] = useState("");
-  const [history, setHistory] = useState<CommandResult[]>(() => [createWelcomeEntry()]);
+  const [input, setInput] = useState(initialCommand);
+  const [history, setHistory] = useState<CommandResult[]>(() => [createWelcomeEntry(initialCommand)]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
@@ -34,7 +41,10 @@ export function PlaygroundShell() {
     () => buildPlaygroundViewModel(gitState, history.at(-1)?.effect),
     [gitState, history]
   );
-  const graphViewModel = useMemo(() => buildGitGraphViewModel(gitState), [gitState]);
+  const graphViewModel = useMemo(
+    () => buildGitGraphViewModel(gitState, history.at(-1)?.effect),
+    [gitState, history]
+  );
 
   function runCommand(command: string) {
     const trimmed = command.trim();
@@ -71,10 +81,10 @@ export function PlaygroundShell() {
   function resetPlayground() {
     const freshState = createInitialGitState();
     setGitState(freshState);
-    setHistory([createWelcomeEntry()]);
+    setHistory([createWelcomeEntry(initialCommand)]);
     setCommandHistory([]);
     setHistoryIndex(null);
-    setInput("");
+    setInput(initialCommand);
   }
 
   return (

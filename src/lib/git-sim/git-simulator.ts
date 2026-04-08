@@ -36,6 +36,8 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
   }
 
   switch (command.name) {
+    case "clone":
+      return cloneRepository(state, command.args);
     case "init":
       return initRepository(state);
     case "status":
@@ -72,10 +74,57 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前覆盖 init、status、add、commit、log、diff、restore、reset、branch、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 clone、init、status、add、commit、log、diff、restore、reset、branch、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
         }
       };
   }
+}
+
+function cloneRepository(state: GitState, args: string[]): CommandResult {
+  const remoteUrl = args[0];
+  if (!remoteUrl) {
+    return {
+      state,
+      output: "fatal: You must specify a repository to clone."
+    };
+  }
+
+  if (state.initialized) {
+    return {
+      state,
+      output: "fatal: destination path '/open-git' already exists and is not an empty directory."
+    };
+  }
+
+  const repositoryName = getRepositoryName(remoteUrl);
+  const commit: GitCommit = {
+    hash: "c000001",
+    message: `Clone from ${remoteUrl}`,
+    files: initialFiles.map((file) => file.path),
+    branch: "main",
+    parentHash: null
+  };
+
+  return {
+    state: {
+      initialized: true,
+      branch: "main",
+      branches: ["main"],
+      branchHeads: { main: commit.hash },
+      head: commit.hash,
+      files: initialFiles.map((file) => ({ ...file, status: "tracked" as const })),
+      commits: [commit],
+      remoteCommits: [{ ...commit, files: [...commit.files] }],
+      remoteBranchHeads: { main: commit.hash }
+    },
+    output: `Cloning into '${repositoryName}'...\nremote: Enumerating objects: 3, done.\nReceiving objects: 100% (3/3), done.`,
+    effect: {
+      type: "clone",
+      from: "remote",
+      to: "local",
+      filePaths: commit.files
+    }
+  };
 }
 
 function initRepository(state: GitState): CommandResult {
@@ -576,6 +625,12 @@ function getCommitMessage(args: string[]): string {
 
 function createCommitHash(seed: number): string {
   return `c${seed.toString().padStart(6, "0")}`;
+}
+
+function getRepositoryName(remoteUrl: string): string {
+  const segments = remoteUrl.split("/").filter(Boolean);
+  const lastSegment = segments[segments.length - 1] ?? "repository";
+  return lastSegment.endsWith(".git") ? lastSegment.slice(0, -4) : lastSegment;
 }
 
 function wasCommitted(state: GitState, filePath: string): boolean {

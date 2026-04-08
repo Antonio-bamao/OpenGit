@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGitState, executeGitCommand } from "./git-simulator";
-import { getLearningChecklist, getSoloProjectScenario } from "./learning-guide";
+import { getActiveLearningScenario, getLearningChecklist, getSoloProjectScenario, getTeamCollaborationScenario } from "./learning-guide";
 
 describe("getLearningChecklist", () => {
   it("tracks the guided git workflow from init to push", () => {
@@ -53,5 +53,44 @@ describe("getLearningChecklist", () => {
     expect(scenario.progressLabel).toBe("5/5");
     expect(scenario.activeTask).toBeUndefined();
     expect(scenario.isComplete).toBe(true);
+  });
+
+  it("describes the team collaboration scenario after cloning a repository", () => {
+    let state = createInitialGitState();
+
+    let scenario = getTeamCollaborationScenario(state);
+    expect(scenario.progressLabel).toBe("0/4");
+    expect(scenario.activeTask?.command).toBe("git clone https://github.com/opengit/example.git");
+
+    state = executeGitCommand(state, "git clone https://github.com/opengit/example.git").state;
+    scenario = getTeamCollaborationScenario(state);
+    expect(scenario.id).toBe("team-collab");
+    expect(scenario.title).toBe("加入团队项目");
+    expect(scenario.progressLabel).toBe("1/4");
+    expect(scenario.activeTask?.command).toBe("git switch -c feature/team-work");
+
+    state = executeGitCommand(state, "git switch -c feature/team-work").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    scenario = getTeamCollaborationScenario(state);
+    expect(scenario.progressLabel).toBe("2/4");
+    expect(scenario.activeTask?.command).toBe('git commit -m "team work"');
+
+    state = executeGitCommand(state, 'git commit -m "team work"').state;
+    scenario = getTeamCollaborationScenario(state);
+    expect(scenario.progressLabel).toBe("3/4");
+    expect(scenario.activeTask?.command).toBe("git push");
+
+    state = executeGitCommand(state, "git push").state;
+    scenario = getTeamCollaborationScenario(state);
+    expect(scenario.progressLabel).toBe("4/4");
+    expect(scenario.isComplete).toBe(true);
+  });
+
+  it("selects the team scenario once the state came from clone", () => {
+    let state = createInitialGitState();
+    expect(getActiveLearningScenario(state).id).toBe("solo-project");
+
+    state = executeGitCommand(state, "git clone https://github.com/opengit/example.git").state;
+    expect(getActiveLearningScenario(state).id).toBe("team-collab");
   });
 });

@@ -30,7 +30,9 @@ export function GitGraphPanel({ graph }: GitGraphPanelProps) {
                   />
                   <span
                     className={`relative h-3 w-3 rounded-full border-2 ${
-                      node.isHead
+                      node.isActiveHead
+                        ? "border-[var(--git-orange)] bg-[var(--git-orange)] shadow-[0_0_0_6px_rgba(240,81,51,0.12)]"
+                        : node.isHead
                         ? "border-[var(--git-orange)] bg-[var(--git-orange)]"
                         : "border-emerald-500 bg-white"
                     }`}
@@ -50,7 +52,11 @@ export function GitGraphPanel({ graph }: GitGraphPanelProps) {
                     {node.refs.map((ref) => (
                       <span
                         key={ref}
-                        className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800"
+                        className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                          node.activeRefs.includes(ref)
+                            ? "border-emerald-300 bg-emerald-100 text-emerald-900"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        }`}
                       >
                         {ref}
                       </span>
@@ -58,7 +64,11 @@ export function GitGraphPanel({ graph }: GitGraphPanelProps) {
                     {node.remoteRefs.map((ref) => (
                       <span
                         key={ref}
-                        className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-semibold text-slate-500"
+                        className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                          node.activeRemoteRefs.includes(ref)
+                            ? "border-sky-200 bg-sky-50 text-sky-800"
+                            : "border-slate-200 bg-white text-slate-500"
+                        }`}
                       >
                         {ref}
                       </span>

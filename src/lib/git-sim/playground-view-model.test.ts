@@ -82,4 +82,30 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.syncStatus.behind).toBe(1);
     expect(viewModel.syncStatus.summary).toBe("ahead 1 / behind 1");
   });
+
+  it("uses the team collaboration scenario after cloning", () => {
+    let state = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    ).state;
+
+    let viewModel = buildPlaygroundViewModel(state);
+
+    expect(viewModel.learningScenario.id).toBe("team-collab");
+    expect(viewModel.activeTask?.command).toBe("git switch -c feature/team-work");
+    expect(viewModel.syncStatus.summary).toBe("up to date");
+    expect(viewModel.remoteRefs.map((ref) => ref.name)).toEqual(["origin/main"]);
+
+    state = executeGitCommand(state, "git switch -c feature/team-work").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "team work"').state;
+    state = executeGitCommand(state, "git push").state;
+
+    viewModel = buildPlaygroundViewModel(state);
+
+    expect(viewModel.remoteRefs).toEqual([
+      { name: "origin/feature/team-work", branch: "feature/team-work", target: "c000002", isCurrentBranch: true },
+      { name: "origin/main", branch: "main", target: "c000001", isCurrentBranch: false }
+    ]);
+  });
 });

@@ -48,10 +48,16 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="motion-fade-up motion-delay-3 mt-10 flex">
+        <div className="motion-fade-up motion-delay-3 mt-10 flex flex-wrap gap-3">
+          <Link
+            href="/scenarios"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+          >
+            选择练习场景
+          </Link>
           <Link
             href="/playground"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
           >
             开始第一轮模拟
           </Link>

@@ -79,3 +79,12 @@
 - 解决方案：将 Set 展开改为 Array.from(set)，保留派生逻辑并兼容当前编译目标。
 - 预防措施：在新增 Set/Map 迭代写法后必须运行 pnpm build；优先使用 Array.from 以兼容当前 tsconfig。
 - 状态：fixed
+
+## next dev 与 next build 共用 .next 导致 chunk 987 路径错配
+- 现象：访问 http://127.0.0.1:3900/ 返回 500，Next dev 报 Cannot find module ./987.js，Require stack 指向 .next/server/webpack-runtime.js 和 .next/server/pages/_document.js。
+- 触发条件：用户保持 pnpm dev 在 3900 运行时，开发过程中重复执行 pnpm build 做验证。
+- 影响：当前开发服务器首页不可用，出现 Next.js Server Error 覆盖层；后续每次 build 都可能再次打坏正在运行的 dev server。
+- 根因：next dev 与 next build 默认共用项目根目录下的 .next 输出目录。在 Windows 上，正在运行的 dev 进程读取到了被 build 覆盖后的 app 产物，形成 dev webpack runtime 仍按 ./987.js 加载，而实际 chunk 位于 chunks/987.js 的错配。
+- 解决方案：新增 src/lib/next-dist-dir.mjs 和回归测试，在 next.config.mjs 中按 NODE_ENV 将 distDir 分离为 .next-dev 和 .next-build；并用隔离的 next dev -p 3100 验证新开发输出目录能正常返回 200。
+- 预防措施：后续保持 dev/build 输出目录隔离；在本地验证时避免让长期运行的 dev server 与 build 共用同一个 distDir；遇到类似 chunk 缺失先检查 runtime 与 chunk 目录是否来自不同模式的产物。
+- 状态：resolved

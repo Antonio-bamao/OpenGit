@@ -72,6 +72,26 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
             </span>
           ))}
         </div>
+        {viewModel.remoteRefs.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-500">远端分支</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {viewModel.remoteRefs.map((ref) => (
+                <span
+                  key={ref.name}
+                  className={`rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                    ref.isCurrentBranch
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : "border-slate-200 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  <span className="font-mono">{ref.name}</span>
+                  <span className="ml-1 font-mono opacity-70">{ref.target}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5 divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200">
