@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createInitialGitState, executeGitCommand } from "@/lib/git-sim/git-simulator";
-import type { CommandResult, GitFileStatus } from "@/lib/git-sim/types";
+import type { CommandResult, GitFileStatus, GitFlowZone } from "@/lib/git-sim/types";
 
 const zones = [
   { key: "working", label: "工作区", description: "尚未暂存的文件" },
@@ -25,10 +25,17 @@ const statusClasses: Record<GitFileStatus, string> = {
   tracked: "border-slate-200 bg-slate-100 text-slate-700"
 };
 
+const flowLinks: Array<{ from: GitFlowZone; to: GitFlowZone }> = [
+  { from: "working", to: "staging" },
+  { from: "staging", to: "local" },
+  { from: "local", to: "remote" }
+];
+
 function createWelcomeEntry(): CommandResult {
   return {
     state: createInitialGitState(),
-    output: "输入 git init 开始。随后试试 git status、git add .、git commit -m \"first commit\"。",
+    output:
+      "输入 git init 开始。随后试试 git status、git add .、git commit -m \"first commit\"、git diff --staged、git push。",
     hint: {
       title: "Playground 已就绪",
       body: "这里先用可控 Git 状态模型模拟基础命令，帮助你把命令和仓库结构对应起来。"
@@ -53,9 +60,51 @@ export function PlaygroundShell() {
       working,
       staging,
       local: gitState.commits.length,
-      remote: 0
+      remote: gitState.remoteCommits.length
     };
   }, [gitState]);
+
+  const latestEffect = history.at(-1)?.effect;
+  const flowItems = useMemo(
+    () => ({
+      working: gitState.files
+        .filter((file) => file.status === "untracked" || file.status === "modified")
+        .map((file) => ({
+          id: file.path,
+          label: file.path,
+          meta: statusLabels[file.status],
+          status: file.status
+        })),
+      staging: gitState.files
+        .filter((file) => file.status === "staged")
+        .map((file) => ({
+          id: file.path,
+          label: file.path,
+          meta: "下一次提交",
+          status: file.status
+        })),
+      local: gitState.commits.map((commit) => ({
+        id: commit.hash,
+        label: commit.hash,
+        meta: commit.message,
+        status: "tracked" as const
+      })),
+      remote: gitState.remoteCommits.map((commit) => ({
+        id: commit.hash,
+        label: commit.hash,
+        meta: `origin/${gitState.branch}`,
+        status: "tracked" as const
+      }))
+    }),
+    [gitState]
+  );
+
+  function isFlowActive(from: GitFlowZone, to: GitFlowZone) {
+    return (
+      (latestEffect?.from === from && latestEffect.to === to) ||
+      (latestEffect?.from === to && latestEffect.to === from)
+    );
+  }
 
   function runCommand(command: string) {
     const trimmed = command.trim();
@@ -171,17 +220,48 @@ export function PlaygroundShell() {
       <div className="grid gap-4">
         <div className="motion-fade-up motion-delay-1">
           <p className="text-sm font-semibold text-emerald-700">可视化面板</p>
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <div className="mt-4 grid items-stretch gap-3 md:grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)_32px_minmax(0,1fr)_32px_minmax(0,1fr)]">
             {zones.map((zone, index) => (
-              <div
-                key={zone.key}
-                className={`motion-fade-up rounded-lg border border-slate-200 bg-slate-50 p-4 text-center transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:bg-white ${
-                  index === 1 ? "motion-delay-1" : index === 2 ? "motion-delay-2" : index === 3 ? "motion-delay-3" : ""
-                }`}
-              >
-                <p className="font-semibold text-slate-950">{zone.label}</p>
-                <p className="mt-2 text-3xl font-semibold text-emerald-700">{zoneCounts[zone.key]}</p>
-                <p className="mt-2 text-xs leading-5 text-slate-500">{zone.description}</p>
+              <div key={zone.key} className="contents">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 transition duration-200 hover:border-emerald-300 hover:bg-white">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-950">{zone.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">{zone.description}</p>
+                    </div>
+                    <span className="rounded-md bg-white px-2 py-1 text-sm font-semibold text-emerald-700 shadow-sm">
+                      {zoneCounts[zone.key]}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 min-h-28 space-y-2">
+                    {flowItems[zone.key].length > 0 ? (
+                      flowItems[zone.key].map((item) => (
+                        <div
+                          key={item.id}
+                          className={`flow-chip rounded-md border bg-white px-2.5 py-2 text-xs shadow-sm ${
+                            statusClasses[item.status]
+                          }`}
+                        >
+                          <p className="truncate font-mono font-semibold">{item.label}</p>
+                          <p className="mt-1 truncate opacity-75">{item.meta}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="rounded-md border border-dashed border-slate-300 px-2.5 py-3 text-center text-xs leading-5 text-slate-400">
+                        等待流入
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {index < flowLinks.length ? (
+                  <div
+                    className={`flow-link hidden self-center md:block ${
+                      isFlowActive(flowLinks[index].from, flowLinks[index].to) ? "flow-link-active" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
+                ) : null}
               </div>
             ))}
           </div>
@@ -189,7 +269,7 @@ export function PlaygroundShell() {
 
         <div className="motion-fade-up motion-delay-2 rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <p className="text-sm font-semibold text-emerald-700">仓库状态</p>
-          <dl className="mt-4 grid overflow-hidden border-y border-slate-200 text-sm text-slate-600 sm:grid-cols-3 sm:border-x">
+          <dl className="mt-4 grid overflow-hidden border-y border-slate-200 text-sm text-slate-600 sm:grid-cols-4 sm:border-x">
             <div className="border-b border-slate-200 p-3 sm:border-b-0 sm:border-r">
               <dt className="text-xs font-semibold text-slate-500">Initialized</dt>
               <dd className="mt-1 font-mono text-slate-950">{gitState.initialized ? "yes" : "no"}</dd>
@@ -201,6 +281,10 @@ export function PlaygroundShell() {
             <div className="p-3">
               <dt className="text-xs font-semibold text-slate-500">Branch</dt>
               <dd className="mt-1 font-mono text-slate-950">{gitState.branch}</dd>
+            </div>
+            <div className="border-t border-slate-200 p-3 sm:border-l sm:border-t-0">
+              <dt className="text-xs font-semibold text-slate-500">Remote</dt>
+              <dd className="mt-1 font-mono text-slate-950">{gitState.remoteCommits.length} commits</dd>
             </div>
           </dl>
 

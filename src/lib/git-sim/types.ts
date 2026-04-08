@@ -19,9 +19,11 @@ export interface GitHint {
 export interface GitState {
   initialized: boolean;
   branch: string;
+  branches: string[];
   head: string | null;
   files: GitFile[];
   commits: GitCommit[];
+  remoteCommits: GitCommit[];
 }
 
 export interface GitCommand {
@@ -35,5 +37,16 @@ export interface CommandResult {
   state: GitState;
   output: string;
   hint?: GitHint;
+  effect?: GitFlowEffect;
 }
 
+export type GitFlowZone = "working" | "staging" | "local" | "remote";
+
+export type GitFlowEffectType = "stage" | "unstage" | "commit" | "push" | "switch";
+
+export interface GitFlowEffect {
+  type: GitFlowEffectType;
+  from?: GitFlowZone;
+  to?: GitFlowZone;
+  filePaths?: string[];
+}

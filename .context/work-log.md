@@ -41,3 +41,11 @@
 - 结果：首页首屏现在以 3D Git 流程空间作为核心视觉，Playground 不再是黑色终端框，命令输出、提示、状态区和文件列表都有更柔和的过渡反馈。
 - 验证：`pnpm lint` 无警告或错误；`pnpm test` 2 个测试文件、4 个测试全部通过；`pnpm build` 成功生成 `/`、`/_not-found`、`/playground`。
 - 下一步：继续做工作流动画和命令覆盖增强。
+
+## 2026-04-08 19:55 - 扩展基础命令与工作流流水线
+
+- 目标：继续 Phase 2，扩展更多 Git 基础命令，并让可视化更像文件从工作区流向暂存区、本地仓库和远端仓库。
+- 动作：用 TDD 为 `restore --staged`、`reset`、`diff --staged`、`branch`、`switch -c`、`push` 和命令 flow effect 写红灯测试；扩展 `GitState` 的 `branches`、`remoteCommits`；在 `CommandResult` 中加入 `effect`；将 `/playground` 右侧数字卡片改为四段流水线和 file/commit chips；最近一次命令会高亮对应流向连接线。
+- 结果：MVP 支持更多常用命令，`git add`、`git commit`、`git push` 等操作会同步更新流水线中的文件/提交位置，`reset`/`restore --staged` 会高亮工作区与暂存区之间的连接。
+- 验证：先运行新增 simulator 测试得到 5 个预期失败；实现后 `pnpm test` 2 个测试文件、8 个测试全部通过；`pnpm lint` 无警告或错误；`pnpm build` 成功；`http://localhost:3900/playground` 返回 200。
+- 下一步：补充场景化任务、分支图和 HEAD/引用可视化。

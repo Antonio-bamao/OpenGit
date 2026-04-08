@@ -13,12 +13,14 @@ describe("executeGitCommand", () => {
     result = executeGitCommand(state, "git add .");
     state = result.state;
     expect(result.output).toContain("added 3 files");
+    expect(result.effect?.type).toBe("stage");
     expect(state.files.every((file) => file.status === "staged")).toBe(true);
 
     result = executeGitCommand(state, 'git commit -m "first commit"');
     state = result.state;
     expect(result.output).toContain("[main ");
     expect(result.output).toContain("first commit");
+    expect(result.effect?.type).toBe("commit");
     expect(state.commits).toHaveLength(1);
     expect(state.files.every((file) => file.status === "tracked")).toBe(true);
 
@@ -33,5 +35,66 @@ describe("executeGitCommand", () => {
     expect(result.output).toContain("git: 'yeet' is not a git command");
     expect(result.hint?.title).toBe("为什么报错");
     expect(result.hint?.body).toContain("OpenGit MVP");
+  });
+
+  it("unstages files with restore --staged and reset", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+
+    let result = executeGitCommand(state, "git add README.md");
+    state = result.state;
+    expect(state.files.find((file) => file.path === "README.md")?.status).toBe("staged");
+
+    result = executeGitCommand(state, "git restore --staged README.md");
+    state = result.state;
+    expect(result.output).toContain("unstaged 1 file");
+    expect(result.effect?.type).toBe("unstage");
+    expect(state.files.find((file) => file.path === "README.md")?.status).toBe("untracked");
+
+    state = executeGitCommand(state, "git add .").state;
+    result = executeGitCommand(state, "git reset");
+    state = result.state;
+    expect(result.output).toContain("unstaged 3 files");
+    expect(result.effect?.type).toBe("unstage");
+    expect(state.files.every((file) => file.status === "untracked")).toBe(true);
+  });
+
+  it("shows staged diffs without changing repository state", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+
+    const result = executeGitCommand(state, "git diff --staged");
+
+    expect(result.output).toContain("diff --staged README.md");
+    expect(result.output).toContain("+ README.md");
+    expect(result.state).toBe(state);
+  });
+
+  it("switches branches and lists the current branch", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+
+    let result = executeGitCommand(state, "git switch -c feature/flow");
+    state = result.state;
+    expect(result.output).toContain("Switched to a new branch 'feature/flow'");
+    expect(result.effect?.type).toBe("switch");
+    expect(state.branch).toBe("feature/flow");
+    expect(state.branches).toContain("main");
+    expect(state.branches).toContain("feature/flow");
+
+    result = executeGitCommand(state, "git branch");
+    expect(result.output).toContain("  main");
+    expect(result.output).toContain("* feature/flow");
+  });
+
+  it("pushes local commits into the simulated remote", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add .").state;
+    state = executeGitCommand(state, 'git commit -m "first commit"').state;
+
+    const result = executeGitCommand(state, "git push");
+
+    expect(result.output).toContain("pushed 1 commit to origin/main");
+    expect(result.effect?.type).toBe("push");
+    expect(result.state.remoteCommits).toHaveLength(1);
+    expect(result.state.remoteCommits[0]?.hash).toBe(state.commits[0]?.hash);
   });
 });

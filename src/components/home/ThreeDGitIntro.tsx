@@ -42,8 +42,8 @@ export function ThreeDGitIntro() {
           </div>
         </div>
 
-        <div className="scene-stage motion-delay-1 relative min-h-[420px] w-full md:min-h-[520px]">
-          <div className="scene-plane absolute left-1/2 top-1/2 h-[360px] w-[520px] max-w-[88vw] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.22)]">
+        <div className="scene-stage motion-delay-1 relative min-h-[560px] w-full md:min-h-[620px]">
+          <div className="scene-plane absolute left-1/2 top-[43%] h-[360px] w-[520px] max-w-[88vw] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.22)]">
             <div className="absolute inset-0 rounded-lg bg-[linear-gradient(90deg,rgba(15,23,42,0.07)_1px,transparent_1px),linear-gradient(180deg,rgba(15,23,42,0.07)_1px,transparent_1px)] bg-[size:42px_42px]" />
 
             <div className="trace-flow absolute left-[15%] top-[64%] h-1 w-[30%] origin-left rotate-[-32deg] rounded bg-emerald-500" />
@@ -76,7 +76,7 @@ export function ThreeDGitIntro() {
               <p className="mt-1 font-mono text-sm text-slate-950">main · c000001</p>
             </div>
           </div>
-          <GitCommandTypewriter className="absolute inset-x-4 bottom-8 z-10 mx-auto max-w-[520px]" />
+          <GitCommandTypewriter className="absolute inset-x-4 bottom-6 z-10 mx-auto max-w-[520px]" />
         </div>
       </div>
     </section>
