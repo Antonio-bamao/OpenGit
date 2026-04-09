@@ -27,6 +27,11 @@ describe("buildPlaygroundViewModel", () => {
         id: "solo-project"
       }
     });
+    expect(viewModel.nextTask?.command).toBe("git switch -c feature/flow");
+    expect(viewModel.nextTaskDoc).toMatchObject({
+      id: "switch",
+      detailHref: "/docs/switch"
+    });
     expect(viewModel.learningScenario.title).toBe("从零开始个人项目");
     expect(viewModel.learningScenario.progressLabel).toBe("2/5");
     expect(viewModel.headCommit).toBe("no commits");
@@ -43,6 +48,8 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.isFlowActive("local", "remote")).toBe(true);
     expect(viewModel.learningChecklist.every((item) => item.completed)).toBe(true);
     expect(viewModel.learningScenario.isComplete).toBe(true);
+    expect(viewModel.nextTask).toBeUndefined();
+    expect(viewModel.nextTaskDoc).toBeUndefined();
     expect(viewModel.headCommit).toBe("c000001");
     expect(viewModel.remoteHead).toBe("c000001");
     expect(viewModel.syncStatus).toMatchObject({
@@ -134,6 +141,11 @@ describe("buildPlaygroundViewModel", () => {
       practiceScenario: {
         id: "version-rollback"
       }
+    });
+    expect(viewModel.nextTask?.command).toBe("git status");
+    expect(viewModel.nextTaskDoc).toMatchObject({
+      id: "status",
+      detailHref: "/docs/status"
     });
   });
 

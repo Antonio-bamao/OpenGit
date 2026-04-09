@@ -61,6 +61,8 @@ export interface PlaygroundViewModel {
   learningChecklist: LearningChecklistItem[];
   activeTask: LearningChecklistItem | undefined;
   activeTaskDoc: CommandDoc | undefined;
+  nextTask: LearningChecklistItem | undefined;
+  nextTaskDoc: CommandDoc | undefined;
   headCommit: string;
   remoteHead: string;
   syncStatus: BranchSyncStatus;
@@ -82,6 +84,11 @@ export function buildPlaygroundViewModel(
   const activeTaskDoc = learningScenario.activeTask
     ? getCommandDocForInput(learningScenario.activeTask.command)
     : undefined;
+  const activeTaskIndex = learningScenario.activeTask
+    ? learningChecklist.findIndex((item) => item.id === learningScenario.activeTask?.id)
+    : -1;
+  const nextTask = activeTaskIndex >= 0 ? learningChecklist[activeTaskIndex + 1] : undefined;
+  const nextTaskDoc = nextTask ? getCommandDocForInput(nextTask.command) : undefined;
   const syncStatus = buildBranchSyncStatus(gitState);
   const remoteRefs = buildRemoteRefs(gitState);
 
@@ -122,6 +129,8 @@ export function buildPlaygroundViewModel(
     learningChecklist,
     activeTask: learningScenario.activeTask,
     activeTaskDoc,
+    nextTask,
+    nextTaskDoc,
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
     syncStatus,

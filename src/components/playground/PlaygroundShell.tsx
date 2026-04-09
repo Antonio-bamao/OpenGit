@@ -116,6 +116,8 @@ export function PlaygroundShell({
           <LearningPathPanel
             activeTask={viewModel.activeTask}
             activeTaskDoc={viewModel.activeTaskDoc}
+            nextTask={viewModel.nextTask}
+            nextTaskDoc={viewModel.nextTaskDoc}
             checklist={viewModel.learningChecklist}
             scenario={viewModel.learningScenario}
             onFillCommand={setInput}

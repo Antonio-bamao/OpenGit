@@ -5,6 +5,8 @@ import { getDocsHrefForCommandInput, type CommandDoc } from "@/lib/git-docs";
 interface LearningPathPanelProps {
   activeTask?: LearningChecklistItem;
   activeTaskDoc?: CommandDoc;
+  nextTask?: LearningChecklistItem;
+  nextTaskDoc?: CommandDoc;
   checklist: LearningChecklistItem[];
   scenario: LearningScenario;
   onFillCommand: (command: string) => void;
@@ -13,6 +15,8 @@ interface LearningPathPanelProps {
 export function LearningPathPanel({
   activeTask,
   activeTaskDoc,
+  nextTask,
+  nextTaskDoc,
   checklist,
   scenario,
   onFillCommand
@@ -76,6 +80,28 @@ export function LearningPathPanel({
               推荐练习：{activeTaskDoc.practiceScenario?.title ?? "当前 Playground"}
             </span>
           </div>
+          {nextTask && nextTaskDoc ? (
+            <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
+              <p className="font-semibold text-slate-950">做完这一步后，建议先看下一条命令</p>
+              <p className="mt-2 font-mono text-sm text-slate-900">{nextTaskDoc.syntax}</p>
+              <p className="mt-2 leading-5">{nextTask.goal}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Link
+                  href={nextTaskDoc.detailHref}
+                  className="inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                >
+                  看下一条命令解释
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => onFillCommand(nextTask.command)}
+                  className="min-h-8 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                >
+                  预填下一条命令
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
       <div className="mt-3 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 sm:grid-cols-2">

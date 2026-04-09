@@ -212,3 +212,10 @@
 - 结果：现在像 `/docs/status` 会明确告诉用户它更适合从“处理冲突”场景进入，并且对应“查看未合并路径”这一步；`/docs/log` 也会回到“版本回退与修复”里的“观察已有历史”。命令文档真正从静态解释变成了场景化练习入口。
 - 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、10 个测试；`pnpm test` 通过 9 个测试文件、57 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs/status` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=conflict-resolution&command=git%20status"` 返回 200；`curl -I http://127.0.0.1:3900/docs/log` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20log"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续补强当前任务完成后的引导，例如在 Playground 里提示“这一步做完建议去看哪条命令”或在 `/docs` 总览页加上“高频场景入口”。 
+
+## 2026-04-10 00:18｜给 Playground 学习面板补“下一条命令”引导
+- 目标：让用户在当前步骤还没做完时，就能提前知道下一步推荐去看哪条命令，减少练习过程中的停顿和切换成本
+- 动作：按 TDD 为 `playground-view-model` 增加 `nextTask` 与 `nextTaskDoc` 断言；在 `src/lib/git-sim/playground-view-model.ts` 中从当前 checklist 派生下一条任务及其 docs 对象；更新 `src/components/playground/panels/LearningPathPanel.tsx`，在“当前命令”卡片下方新增一条轻量提示，展示下一条命令的语法、目标，以及“看下一条命令解释”“预填下一条命令”入口；同步更新 `src/components/playground/PlaygroundShell.tsx` 传递新数据。
+- 结果：Playground 现在不只会告诉用户“当前这一步怎么做”，还会顺手提示“做完这一步后建议先看什么”，让从当前任务流向下一条命令的过渡更顺，不用再自己翻 checklist 猜下一步。
+- 验证：`pnpm test src/lib/git-sim/playground-view-model.test.ts` 通过 1 个测试文件、7 个测试；`pnpm test` 通过 9 个测试文件、57 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20add%20README.md"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20revert%20HEAD"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把这类引导做得更显眼，例如在 `/docs` 总览页整理“高频场景入口”或在 Playground 中给下一步推荐加更强的视觉优先级。 
