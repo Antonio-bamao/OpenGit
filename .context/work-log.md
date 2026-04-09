@@ -233,3 +233,11 @@
 - 结果：Playground 现在不只知道下一条推荐命令，还会明确提示这条命令更偏向 `推荐起点`、`协作进阶`、`问题处理` 或 `历史修复`；用户从学习面板就能直接顺着优先级跳去更合适的练习场景。
 - 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件 19 个测试；`pnpm test` 通过 9 个测试文件 59 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20add%20README.md"` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续把同一套场景优先级推到 `/docs/[slug]` 详情页和 `/scenarios` 卡片，让 docs、playground、scenarios 三处入口的推荐层级完全一致。
+
+## 2026-04-10 00:53 - 把场景优先级继续接到 docs 详情页和 scenarios 卡片
+
+- 目标：让 `/docs/[slug]` 和 `/scenarios` 也使用和 docs 快启入口、Playground 面板同一套场景优先级元数据。
+- 动作：按 TDD 先在 `src/lib/git-docs.test.ts` 补 `getFeaturedScenarioMeta` 的失败断言；随后在 `src/lib/git-docs.ts` 暴露 `scenarioId -> badge/emphasis` 的共享 helper，并在 `src/app/docs/[slug]/page.tsx` 里给推荐流补场景等级标签，在 `src/app/scenarios/page.tsx` 里给高频场景卡片补统一 badge 和主次强调样式。
+- 结果：现在用户在 `/docs/init` 能看到对应练习流属于 `推荐起点`，在 `/scenarios` 也能一眼识别哪张卡更适合先练，三个入口的推荐逻辑开始真正统一。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件 13 个测试；`pnpm test` 通过 9 个测试文件 60 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/scenarios` 返回 200；`curl -I http://127.0.0.1:3900/docs/init` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把“推荐起点”细化成更明确的新手路径，例如在 docs 详情页补“练完这条命令建议去哪一张场景卡”，或在 scenarios 页做更清晰的初学者排序提示。

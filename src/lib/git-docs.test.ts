@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   commandDocs,
   getFeaturedDocScenarios,
+  getFeaturedScenarioMeta,
   getAllCommandDocSlugs,
   getCommandDocBySlug,
   getCommandDocForInput,
@@ -173,6 +174,20 @@ describe("git-docs", () => {
         detailHref: "/docs/pull"
       }
     });
+  });
+
+  it("exposes featured scenario priority metadata for reuse across docs and scenarios", () => {
+    expect(getFeaturedScenarioMeta("solo-project")).toEqual({
+      id: "solo-project",
+      badge: "推荐起点",
+      emphasis: "primary"
+    });
+    expect(getFeaturedScenarioMeta("conflict-resolution")).toEqual({
+      id: "conflict-resolution",
+      badge: "问题处理",
+      emphasis: "secondary"
+    });
+    expect(getFeaturedScenarioMeta("release-management")).toBeUndefined();
   });
 
   it("returns the full grouped catalog when the search query is empty", () => {

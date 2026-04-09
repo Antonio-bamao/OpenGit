@@ -331,6 +331,10 @@ export function getPracticeGuidanceForCommandDoc(docId: string): PracticeGuidanc
   };
 }
 
+export function getFeaturedScenarioMeta(scenarioId: string) {
+  return featuredScenarioMeta.find((entry) => entry.id === scenarioId);
+}
+
 export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
   const featuredScenarioMeta = [
     { id: "solo-project", badge: "推荐起点", emphasis: "primary" as const },

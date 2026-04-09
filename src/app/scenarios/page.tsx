@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { getDocsHrefForCommandInput } from "@/lib/git-docs";
+import { getDocsHrefForCommandInput, getFeaturedScenarioMeta } from "@/lib/git-docs";
 import { scenarioCatalog } from "@/lib/git-sim/scenario-catalog";
 
 export default function ScenariosPage() {
@@ -19,12 +19,17 @@ export default function ScenariosPage() {
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          {scenarioCatalog.map((scenario, index) => (
+          {scenarioCatalog.map((scenario, index) => {
+            const featuredMeta = getFeaturedScenarioMeta(scenario.id);
+
+            return (
             <article
               key={scenario.id}
-              className={`motion-fade-up rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)] ${
-                index % 2 === 1 ? "motion-delay-1" : ""
-              }`}
+              className={`motion-fade-up rounded-lg border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)] ${
+                featuredMeta?.emphasis === "primary"
+                  ? "border-emerald-300 ring-1 ring-emerald-200 hover:border-emerald-400"
+                  : "border-slate-200 hover:border-emerald-300"
+              } ${index % 2 === 1 ? "motion-delay-1" : ""}`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -43,6 +48,20 @@ export default function ScenariosPage() {
                   {scenario.statusLabel}
                 </span>
               </div>
+
+              {featuredMeta ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                  <span
+                    className={`rounded-full px-2.5 py-1 font-semibold ${
+                      featuredMeta.emphasis === "primary"
+                        ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border border-slate-200 bg-slate-50 text-slate-500"
+                    }`}
+                  >
+                    {featuredMeta.badge}
+                  </span>
+                </div>
+              ) : null}
 
               <p className="mt-4 leading-7 text-slate-600">{scenario.summary}</p>
               <p className="mt-3 text-sm leading-6 text-slate-500">{scenario.objective}</p>
@@ -83,7 +102,7 @@ export default function ScenariosPage() {
                 <span className="font-mono text-xs text-slate-500">{scenario.primaryCommand}</span>
               </div>
             </article>
-          ))}
+          )})}
         </div>
       </section>
     </main>

@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import {
   getAllCommandDocSlugs,
   getCommandDocBySlug,
+  getFeaturedScenarioMeta,
   getGroupedCommandDocs,
   getPracticeGuidanceForCommandDoc
 } from "@/lib/git-docs";
@@ -26,6 +27,7 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
   }
 
   const practiceGuidance = getPracticeGuidanceForCommandDoc(doc.id);
+  const practicePriority = practiceGuidance ? getFeaturedScenarioMeta(practiceGuidance.scenario.id) : undefined;
   const siblingCommands =
     getGroupedCommandDocs()
       .find((group) => group.id === doc.category)
@@ -65,6 +67,19 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                   Recommended Flow
                 </p>
+                {practicePriority ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        practicePriority.emphasis === "primary"
+                          ? "border border-emerald-200 bg-white text-emerald-800"
+                          : "border border-emerald-200 bg-emerald-100 text-emerald-900"
+                      }`}
+                    >
+                      {practicePriority.badge}
+                    </span>
+                  </div>
+                ) : null}
                 <h2 className="mt-3 text-lg font-semibold text-slate-950">
                   适合从「{practiceGuidance.scenario.title}」进入
                 </h2>
