@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { buildGitGraphViewModel } from "@/lib/git-sim/git-graph-view-model";
 import { buildPlaygroundViewModel } from "@/lib/git-sim/playground-view-model";
 import { createInitialGitState, executeGitCommand } from "@/lib/git-sim/git-simulator";
-import type { CommandResult } from "@/lib/git-sim/types";
+import type { CommandResult, GitState } from "@/lib/git-sim/types";
 import { CommandTerminalPanel } from "./panels/CommandTerminalPanel";
 import { GitGraphPanel } from "./panels/GitGraphPanel";
 import { GitWorkflowPanel } from "./panels/GitWorkflowPanel";
@@ -13,6 +13,8 @@ import { RepositoryInsightPanel } from "./panels/RepositoryInsightPanel";
 
 interface PlaygroundShellProps {
   initialCommand?: string;
+  initialHistory?: CommandResult[];
+  initialState?: GitState;
 }
 
 function createWelcomeEntry(initialCommand = ""): CommandResult {
@@ -30,10 +32,17 @@ function createWelcomeEntry(initialCommand = ""): CommandResult {
   };
 }
 
-export function PlaygroundShell({ initialCommand = "" }: PlaygroundShellProps) {
-  const [gitState, setGitState] = useState(createInitialGitState);
+export function PlaygroundShell({
+  initialCommand = "",
+  initialHistory,
+  initialState
+}: PlaygroundShellProps) {
+  const seededState = initialState ?? createInitialGitState();
+  const seededHistory = initialHistory ?? [createWelcomeEntry(initialCommand)];
+
+  const [gitState, setGitState] = useState(seededState);
   const [input, setInput] = useState(initialCommand);
-  const [history, setHistory] = useState<CommandResult[]>(() => [createWelcomeEntry(initialCommand)]);
+  const [history, setHistory] = useState<CommandResult[]>(seededHistory);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
@@ -79,9 +88,8 @@ export function PlaygroundShell({ initialCommand = "" }: PlaygroundShellProps) {
   }
 
   function resetPlayground() {
-    const freshState = createInitialGitState();
-    setGitState(freshState);
-    setHistory([createWelcomeEntry(initialCommand)]);
+    setGitState(seededState);
+    setHistory(seededHistory);
     setCommandHistory([]);
     setHistoryIndex(null);
     setInput(initialCommand);

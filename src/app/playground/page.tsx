@@ -1,13 +1,17 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { PlaygroundShell } from "@/components/playground/PlaygroundShell";
+import { getScenarioPreset } from "@/lib/git-sim/scenario-presets";
 
 interface PlaygroundPageProps {
   searchParams?: {
     command?: string;
+    scenario?: string;
   };
 }
 
 export default function PlaygroundPage({ searchParams }: PlaygroundPageProps) {
+  const preset = getScenarioPreset(searchParams?.scenario);
+
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <AppHeader />
@@ -21,7 +25,11 @@ export default function PlaygroundPage({ searchParams }: PlaygroundPageProps) {
             先试试 git init，再执行 git add . 和 git commit -m &quot;first commit&quot;。
           </p>
         </div>
-        <PlaygroundShell initialCommand={searchParams?.command ?? ""} />
+        <PlaygroundShell
+          initialCommand={searchParams?.command ?? preset.initialCommand}
+          initialHistory={preset.history}
+          initialState={preset.gitState}
+        />
       </div>
     </main>
   );

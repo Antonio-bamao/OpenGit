@@ -135,3 +135,10 @@
 - 结果：后续开发中 next build 不会再破坏正在运行的 next dev；当前仓库同时保留 .next-dev 和 .next-build，临时 3100 实例返回 200，说明新的开发输出目录工作正常。
 - 验证：curl.exe -i http://127.0.0.1:3900/ 复现 500 并返回 Cannot find module ./987.js；pnpm test src/lib/next-dist-dir.test.ts 通过 1 个测试文件 2 个测试；pnpm test 通过 7 个测试文件 27 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功并生成 .next-build；隔离 next dev -p 3100 返回 HTTP 200。
 - 下一步：重启当前 3900 上的旧 dev 进程使其加载新配置，然后继续推进场景初始仓库状态或 conflict/revert/tag/worktree 命令模拟。
+
+## 2026-04-09 20:38｜让场景入口携带初始仓库状态进入 Playground
+- 目标：让场景入口携带初始仓库状态进入 Playground
+- 动作：按 TDD 修改 scenario-catalog 测试并新增 scenario-presets 回归测试；实现 getScenarioPreset，为个人项目返回空白仓库起点，为团队协作返回 clone 完成后的仓库状态；更新 /playground 读取 scenario 查询参数并把 initialState、initialHistory、initialCommand 传给 PlaygroundShell；让 reset 回到当前场景的起始状态而不是通用空白态。
+- 结果：现在从 /scenarios 进入 Playground 时，solo-project 会从空白目录开始，team-collab 会从已 clone 的团队仓库开始，并直接把下一步命令填成 git switch -c feature/team-work。
+- 验证：pnpm test src/lib/git-sim/scenario-catalog.test.ts src/lib/git-sim/scenario-presets.test.ts 通过 2 个测试文件 4 个测试；pnpm test 通过 8 个测试文件 29 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功；curl -I http://127.0.0.1:3900/playground 返回 200；curl -I http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work 返回 200。
+- 下一步：继续扩展 planned 场景的底层命令能力，优先做 conflict/revert/tag/worktree 之一，让 /scenarios 里更多卡片从 planned 变成 ready。

@@ -12,8 +12,8 @@ export interface ScenarioCatalogItem {
   steps: string[];
 }
 
-function createPlaygroundHref(command: string): string {
-  return `/playground?command=${encodeURIComponent(command)}`;
+function createPlaygroundHref(scenarioId: string, command: string): string {
+  return `/playground?scenario=${encodeURIComponent(scenarioId)}&command=${encodeURIComponent(command)}`;
 }
 
 export const scenarioCatalog: ScenarioCatalogItem[] = [
@@ -25,7 +25,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "ready",
     statusLabel: "可练习",
     primaryCommand: "git init",
-    playgroundHref: createPlaygroundHref("git init"),
+    playgroundHref: createPlaygroundHref("solo-project", "git init"),
     steps: ["git init", "git add .", 'git commit -m "first commit"', "git switch -c feature/flow", "git push"]
   },
   {
@@ -36,7 +36,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "ready",
     statusLabel: "可练习",
     primaryCommand: "git clone https://github.com/opengit/example.git",
-    playgroundHref: createPlaygroundHref("git clone https://github.com/opengit/example.git"),
+    playgroundHref: createPlaygroundHref("team-collab", "git switch -c feature/team-work"),
     steps: ["git clone", "git switch -c feature/team-work", 'git commit -m "team work"', "git push"]
   },
   {
@@ -47,7 +47,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "planned",
     statusLabel: "后续",
     primaryCommand: "git pull",
-    playgroundHref: createPlaygroundHref("git pull"),
+    playgroundHref: createPlaygroundHref("conflict-resolution", "git pull"),
     steps: ["git pull", "解决冲突", "git add .", 'git commit -m "resolve conflict"']
   },
   {
@@ -58,7 +58,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "planned",
     statusLabel: "后续",
     primaryCommand: "git reset",
-    playgroundHref: createPlaygroundHref("git reset"),
+    playgroundHref: createPlaygroundHref("version-rollback", "git reset"),
     steps: ["git log", "git reset", "git revert", "git status"]
   },
   {
@@ -69,7 +69,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "planned",
     statusLabel: "后续",
     primaryCommand: "git tag v1.0.0",
-    playgroundHref: createPlaygroundHref("git tag v1.0.0"),
+    playgroundHref: createPlaygroundHref("release-management", "git tag v1.0.0"),
     steps: ["git branch release", "git tag", "git push --tags", "创建 release"]
   },
   {
@@ -80,7 +80,7 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     status: "planned",
     statusLabel: "后续",
     primaryCommand: "git worktree add ../hotfix main",
-    playgroundHref: createPlaygroundHref("git worktree add ../hotfix main"),
+    playgroundHref: createPlaygroundHref("worktree-parallel", "git worktree add ../hotfix main"),
     steps: ["git worktree add", "git worktree list", "修复 hotfix", "git worktree remove"]
   }
 ];

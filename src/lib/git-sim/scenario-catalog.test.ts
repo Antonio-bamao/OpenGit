@@ -17,9 +17,11 @@ describe("scenarioCatalog", () => {
     const readyScenarios = getReadyScenarios();
 
     expect(readyScenarios.map((scenario) => scenario.id)).toEqual(["solo-project", "team-collab"]);
-    expect(readyScenarios[0]?.playgroundHref).toBe("/playground?command=git%20init");
+    expect(readyScenarios[0]?.playgroundHref).toBe(
+      "/playground?scenario=solo-project&command=git%20init"
+    );
     expect(readyScenarios[1]?.playgroundHref).toBe(
-      "/playground?command=git%20clone%20https%3A%2F%2Fgithub.com%2Fopengit%2Fexample.git"
+      "/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"
     );
   });
 });
