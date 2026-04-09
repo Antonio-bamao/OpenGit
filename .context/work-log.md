@@ -198,3 +198,10 @@
 - 结果：`/docs` 现在不仅能搜命令名，还能用“回滚”“远程协作”“热修复”“撤销暂存”这类意图词命中相关命令；命令结果和详情页也都能直接跳回推荐场景，教学链路从“查命令”延伸到“回场景练习”。
 - 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、8 个测试；`pnpm test` 通过 9 个测试文件、55 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I http://127.0.0.1:3900/docs/pull` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续把 docs 与当前 Playground 任务做得更贴合，例如从当前学习步骤直接推荐对应命令文档，或在 docs 中显式标出“适合从哪个场景进入”。 
+
+## 2026-04-09 23:31｜把当前 Playground 步骤直接接到命令文档
+- 目标：让用户在做当前学习任务时，不必跳出思路就能看到这一步命令的解释与后续练习入口
+- 动作：按 TDD 为 `git-docs` 增加 `getCommandDocForInput` 测试，并为 `playground-view-model` 增加 `activeTaskDoc` 断言；在 `src/lib/git-docs.ts` 中补上命令输入到完整文档对象的 helper；在 `src/lib/git-sim/playground-view-model.ts` 中把当前学习步骤对应的命令文档一起派生出来；更新 `src/components/playground/panels/LearningPathPanel.tsx`，在学习面板里直接渲染“当前命令”提示卡、命令简介，以及在需要时跳到相关练习场景；同步更新 `src/components/playground/PlaygroundShell.tsx` 传递新数据。
+- 结果：Playground 学习面板现在不只有“查看命令解释”和“填入下一步”两个按钮，还会直接展示当前步骤的命令语法和简短说明；如果这个命令更适合在另一个场景里再练一遍，也会给出“去相关场景”的入口，让教学闭环更顺。
+- 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件、16 个测试；`pnpm test` 通过 9 个测试文件、56 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20init"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20revert%20HEAD"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把 docs 反向接回当前任务，例如在 `/docs/[slug]` 显式标出“适合从哪个场景进入”与“练完后回到哪一步”。 

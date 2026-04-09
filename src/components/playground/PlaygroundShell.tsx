@@ -115,6 +115,7 @@ export function PlaygroundShell({
         <div className="motion-fade-up motion-delay-2 rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
           <LearningPathPanel
             activeTask={viewModel.activeTask}
+            activeTaskDoc={viewModel.activeTaskDoc}
             checklist={viewModel.learningChecklist}
             scenario={viewModel.learningScenario}
             onFillCommand={setInput}

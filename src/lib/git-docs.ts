@@ -222,13 +222,17 @@ export function searchGroupedCommandDocs(query: string): CommandDocGroup[] {
 }
 
 export function getDocsHrefForCommandInput(input: string): string {
+  const doc = getCommandDocForInput(input);
+  return doc ? doc.detailHref : "/docs";
+}
+
+export function getCommandDocForInput(input: string): CommandDoc | undefined {
   const parsed = parseGitCommand(input);
   if (!parsed.isGit) {
-    return "/docs";
+    return undefined;
   }
 
-  const doc = commandDocs.find((entry) => entry.id === parsed.name);
-  return doc ? doc.detailHref : "/docs";
+  return commandDocs.find((entry) => entry.id === parsed.name);
 }
 
 export function getCommandDocBySlug(slug: string): CommandDoc | undefined {

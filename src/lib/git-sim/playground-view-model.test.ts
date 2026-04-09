@@ -20,6 +20,13 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.flowItems.staging.map((item) => item.label)).toEqual(["README.md"]);
     expect(viewModel.isFlowActive("working", "staging")).toBe(true);
     expect(viewModel.activeTask?.command).toBe('git commit -m "first commit"');
+    expect(viewModel.activeTaskDoc).toMatchObject({
+      id: "commit",
+      detailHref: "/docs/commit",
+      practiceScenario: {
+        id: "solo-project"
+      }
+    });
     expect(viewModel.learningScenario.title).toBe("从零开始个人项目");
     expect(viewModel.learningScenario.progressLabel).toBe("2/5");
     expect(viewModel.headCommit).toBe("no commits");
@@ -121,6 +128,13 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.learningScenario.id).toBe("version-rollback");
     expect(viewModel.learningScenario.title).toBe("版本回退与修复");
     expect(viewModel.activeTask?.command).toBe("git revert HEAD");
+    expect(viewModel.activeTaskDoc).toMatchObject({
+      id: "revert",
+      detailHref: "/docs/revert",
+      practiceScenario: {
+        id: "version-rollback"
+      }
+    });
   });
 
   it("uses an explicitly selected conflict scenario", () => {

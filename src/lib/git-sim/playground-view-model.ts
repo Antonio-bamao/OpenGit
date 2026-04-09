@@ -1,5 +1,6 @@
 import { getLearningScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
 import type { GitCommit, GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
+import { getCommandDocForInput, type CommandDoc } from "../git-docs";
 
 export const flowZones = [
   { key: "working", label: "工作区", description: "尚未暂存的文件" },
@@ -59,6 +60,7 @@ export interface PlaygroundViewModel {
   learningScenario: LearningScenario;
   learningChecklist: LearningChecklistItem[];
   activeTask: LearningChecklistItem | undefined;
+  activeTaskDoc: CommandDoc | undefined;
   headCommit: string;
   remoteHead: string;
   syncStatus: BranchSyncStatus;
@@ -77,6 +79,9 @@ export function buildPlaygroundViewModel(
   const stagedFiles = gitState.files.filter((file) => file.status === "staged");
   const learningScenario = getLearningScenario(gitState, selectedScenarioId);
   const learningChecklist = learningScenario.checklist;
+  const activeTaskDoc = learningScenario.activeTask
+    ? getCommandDocForInput(learningScenario.activeTask.command)
+    : undefined;
   const syncStatus = buildBranchSyncStatus(gitState);
   const remoteRefs = buildRemoteRefs(gitState);
 
@@ -116,6 +121,7 @@ export function buildPlaygroundViewModel(
     learningScenario,
     learningChecklist,
     activeTask: learningScenario.activeTask,
+    activeTaskDoc,
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
     syncStatus,

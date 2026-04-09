@@ -3,6 +3,7 @@ import {
   commandDocs,
   getAllCommandDocSlugs,
   getCommandDocBySlug,
+  getCommandDocForInput,
   getDocsHrefForCommandInput,
   getGroupedCommandDocs,
   searchGroupedCommandDocs
@@ -65,6 +66,24 @@ describe("git-docs", () => {
     expect(getDocsHrefForCommandInput("git worktree add ../hotfix main")).toBe("/docs/worktree");
     expect(getDocsHrefForCommandInput('git commit -m "first commit"')).toBe("/docs/commit");
     expect(getDocsHrefForCommandInput("npm test")).toBe("/docs");
+  });
+
+  it("resolves command input to the current command doc payload", () => {
+    expect(getCommandDocForInput("git push")).toMatchObject({
+      id: "push",
+      detailHref: "/docs/push",
+      practiceScenario: {
+        id: "team-collab"
+      }
+    });
+    expect(getCommandDocForInput("git worktree add ../hotfix main")).toMatchObject({
+      id: "worktree",
+      detailHref: "/docs/worktree",
+      practiceScenario: {
+        id: "worktree-parallel"
+      }
+    });
+    expect(getCommandDocForInput("npm test")).toBeUndefined();
   });
 
   it("exposes slug lookups and static params for detail pages", () => {
