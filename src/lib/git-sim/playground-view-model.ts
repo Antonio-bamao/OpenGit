@@ -22,7 +22,8 @@ export const statusLabels: Record<GitFileStatus, string> = {
   untracked: "未跟踪",
   modified: "已修改",
   staged: "已暂存",
-  tracked: "已提交"
+  tracked: "已提交",
+  conflicted: "冲突中"
 };
 
 export interface FlowItem {
@@ -71,7 +72,7 @@ export function buildPlaygroundViewModel(
   selectedScenarioId?: string
 ): PlaygroundViewModel {
   const workingFiles = gitState.files.filter(
-    (file) => file.status === "untracked" || file.status === "modified"
+    (file) => file.status === "untracked" || file.status === "modified" || file.status === "conflicted"
   );
   const stagedFiles = gitState.files.filter((file) => file.status === "staged");
   const learningScenario = getLearningScenario(gitState, selectedScenarioId);

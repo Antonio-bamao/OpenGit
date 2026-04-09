@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGitState, executeGitCommand } from "./git-simulator";
 import {
+  getConflictResolutionScenario,
   getActiveLearningScenario,
   getLearningChecklist,
   getLearningScenario,
   getSoloProjectScenario,
-  getTeamCollaborationScenario
+  getTeamCollaborationScenario,
+  getWorktreeParallelScenario
 } from "./learning-guide";
 
 describe("getLearningChecklist", () => {
@@ -111,5 +113,120 @@ describe("getLearningChecklist", () => {
     expect(scenario.id).toBe("release-management");
     expect(scenario.title).toBe("发布管理");
     expect(scenario.activeTask?.command).toBe("git branch release");
+  });
+
+  it("describes the conflict-resolution scenario from pull conflict to resolution commit", () => {
+    let state = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    ).state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "local edit"').state;
+    state = {
+      ...state,
+      remoteCommits: [
+        {
+          hash: "c000003",
+          message: "teammate edit",
+          files: ["README.md"],
+          branch: "main",
+          parentHash: "c000001"
+        },
+        ...state.remoteCommits
+      ],
+      remoteBranchHeads: {
+        ...state.remoteBranchHeads,
+        main: "c000003"
+      }
+    };
+
+    let scenario = getConflictResolutionScenario(state);
+    expect(scenario.progressLabel).toBe("0/4");
+    expect(scenario.activeTask?.command).toBe("git pull");
+
+    state = executeGitCommand(state, "git pull").state;
+    scenario = getConflictResolutionScenario(state);
+    expect(scenario.progressLabel).toBe("1/4");
+    expect(scenario.activeTask?.command).toBe("git status");
+
+    state = executeGitCommand(state, "git status").state;
+    scenario = getConflictResolutionScenario(state);
+    expect(scenario.progressLabel).toBe("2/4");
+    expect(scenario.activeTask?.command).toBe("git add README.md");
+
+    state = executeGitCommand(state, "git add README.md").state;
+    scenario = getConflictResolutionScenario(state);
+    expect(scenario.progressLabel).toBe("3/4");
+    expect(scenario.activeTask?.command).toBe('git commit -m "resolve conflict"');
+
+    state = executeGitCommand(state, 'git commit -m "resolve conflict"').state;
+    scenario = getConflictResolutionScenario(state);
+    expect(scenario.progressLabel).toBe("4/4");
+    expect(scenario.isComplete).toBe(true);
+  });
+
+  it("selects the conflict-resolution scenario when requested explicitly", () => {
+    let state = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    ).state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "local edit"').state;
+
+    const scenario = getLearningScenario(state, "conflict-resolution");
+
+    expect(scenario.id).toBe("conflict-resolution");
+    expect(scenario.title).toBe("处理冲突");
+    expect(scenario.activeTask?.command).toBe("git pull");
+  });
+
+  it("describes the worktree parallel scenario progress around creating and cleaning linked trees", () => {
+    let state = createInitialGitState();
+    state = executeGitCommand(state, "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+    state = executeGitCommand(state, "git switch -c feature/payment").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "feature progress"').state;
+
+    let scenario = getWorktreeParallelScenario(state);
+    expect(scenario.progressLabel).toBe("0/4");
+    expect(scenario.activeTask?.command).toBe("git worktree add ../hotfix main");
+
+    state = executeGitCommand(state, "git worktree add ../hotfix main").state;
+    scenario = getWorktreeParallelScenario(state);
+    expect(scenario.progressLabel).toBe("1/4");
+    expect(scenario.activeTask?.command).toBe("git worktree list");
+
+    state = executeGitCommand(state, "git worktree list").state;
+    scenario = getWorktreeParallelScenario(state);
+    expect(scenario.progressLabel).toBe("2/4");
+    expect(scenario.activeTask?.command).toBe("git status");
+
+    state = executeGitCommand(state, "git status").state;
+    scenario = getWorktreeParallelScenario(state);
+    expect(scenario.progressLabel).toBe("3/4");
+    expect(scenario.activeTask?.command).toBe("git worktree remove ../hotfix");
+
+    state = executeGitCommand(state, "git worktree remove ../hotfix").state;
+    scenario = getWorktreeParallelScenario(state);
+    expect(scenario.progressLabel).toBe("4/4");
+    expect(scenario.isComplete).toBe(true);
+  });
+
+  it("selects the worktree scenario when requested explicitly", () => {
+    let state = createInitialGitState();
+    state = executeGitCommand(state, "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+    state = executeGitCommand(state, "git switch -c feature/payment").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "feature progress"').state;
+
+    const scenario = getLearningScenario(state, "worktree-parallel");
+
+    expect(scenario.id).toBe("worktree-parallel");
+    expect(scenario.title).toBe("Worktree 多分支并行开发");
+    expect(scenario.activeTask?.command).toBe("git worktree add ../hotfix main");
   });
 });

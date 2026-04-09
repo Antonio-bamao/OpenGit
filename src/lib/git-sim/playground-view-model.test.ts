@@ -123,6 +123,38 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.activeTask?.command).toBe("git revert HEAD");
   });
 
+  it("uses an explicitly selected conflict scenario", () => {
+    let state = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    ).state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "local edit"').state;
+    state = {
+      ...state,
+      remoteCommits: [
+        {
+          hash: "c000003",
+          message: "teammate edit",
+          files: ["README.md"],
+          branch: "main",
+          parentHash: "c000001"
+        },
+        ...state.remoteCommits
+      ],
+      remoteBranchHeads: {
+        ...state.remoteBranchHeads,
+        main: "c000003"
+      }
+    };
+
+    const viewModel = buildPlaygroundViewModel(state, undefined, "conflict-resolution");
+
+    expect(viewModel.learningScenario.id).toBe("conflict-resolution");
+    expect(viewModel.learningScenario.title).toBe("处理冲突");
+    expect(viewModel.activeTask?.command).toBe("git pull");
+  });
+
   it("uses an explicitly selected release scenario", () => {
     let state = executeGitCommand(createInitialGitState(), "git init").state;
     state = executeGitCommand(state, "git add README.md").state;
@@ -133,5 +165,20 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.learningScenario.id).toBe("release-management");
     expect(viewModel.learningScenario.title).toBe("发布管理");
     expect(viewModel.activeTask?.command).toBe("git branch release");
+  });
+
+  it("uses an explicitly selected worktree scenario", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+    state = executeGitCommand(state, "git switch -c feature/payment").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "feature progress"').state;
+
+    const viewModel = buildPlaygroundViewModel(state, undefined, "worktree-parallel");
+
+    expect(viewModel.learningScenario.id).toBe("worktree-parallel");
+    expect(viewModel.learningScenario.title).toBe("Worktree 多分支并行开发");
+    expect(viewModel.activeTask?.command).toBe("git worktree add ../hotfix main");
   });
 });

@@ -44,11 +44,11 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     title: "处理冲突",
     summary: "两个人修改同一处内容后，通过 pull 看到冲突，再完成解决和提交。",
     objective: "把冲突理解为两条历史对同一片内容的竞争修改。",
-    status: "planned",
-    statusLabel: "后续",
+    status: "ready",
+    statusLabel: "可练习",
     primaryCommand: "git pull",
     playgroundHref: createPlaygroundHref("conflict-resolution", "git pull"),
-    steps: ["git pull", "解决冲突", "git add .", 'git commit -m "resolve conflict"']
+    steps: ["git pull", "git status", "git add README.md", 'git commit -m "resolve conflict"']
   },
   {
     id: "version-rollback",
@@ -76,12 +76,12 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     id: "worktree-parallel",
     title: "Worktree 多分支并行开发",
     summary: "正在 feature 分支开发时，用 worktree 拉出 hotfix 工作目录。",
-    objective: "看清多个工作目录如何共享同一个仓库对象库。",
-    status: "planned",
-    statusLabel: "后续",
+    objective: "看清多个工作目录如何共享同一个仓库对象库，同时保持当前开发分支不被打断。",
+    status: "ready",
+    statusLabel: "可练习",
     primaryCommand: "git worktree add ../hotfix main",
     playgroundHref: createPlaygroundHref("worktree-parallel", "git worktree add ../hotfix main"),
-    steps: ["git worktree add", "git worktree list", "修复 hotfix", "git worktree remove"]
+    steps: ["git worktree add", "git worktree list", "git status", "git worktree remove"]
   }
 ];
 

@@ -10,6 +10,10 @@ interface RepositoryInsightPanelProps {
 export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsightPanelProps) {
   const localTags = Object.entries(gitState.tags).sort(([left], [right]) => left.localeCompare(right));
   const remoteTags = Object.entries(gitState.remoteTags).sort(([left], [right]) => left.localeCompare(right));
+  const linkedWorktrees = [
+    { path: "/open-git", branch: gitState.branch, head: gitState.head, current: true },
+    ...gitState.worktrees.map((worktree) => ({ ...worktree, current: false }))
+  ];
 
   return (
     <>
@@ -95,9 +99,33 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
             </div>
           </div>
         ) : null}
+        {linkedWorktrees.length > 1 ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-500">Worktrees</p>
+            <div className="mt-2 grid gap-2">
+              {linkedWorktrees.map((worktree) => (
+                <div
+                  key={worktree.path}
+                  className={`rounded-md border px-3 py-2 text-xs ${
+                    worktree.current
+                      ? "border-[var(--git-orange)] bg-orange-50 text-slate-900"
+                      : "border-slate-200 bg-slate-50 text-slate-600"
+                  }`}
+                >
+                  <p className="font-mono font-semibold">{worktree.path}</p>
+                  <p className="mt-1 font-mono opacity-80">
+                    {worktree.current ? "current" : "linked"}
+                    {" -> "}
+                    {worktree.branch} @ {worktree.head ?? "empty"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {localTags.length > 0 ? (
           <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold text-slate-500">鏈湴鏍囩</p>
+            <p className="text-xs font-semibold text-slate-500">本地标签</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {localTags.map(([tagName, target]) => (
                 <span
@@ -113,7 +141,7 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
         ) : null}
         {remoteTags.length > 0 ? (
           <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold text-slate-500">杩滅鏍囩</p>
+            <p className="text-xs font-semibold text-slate-500">远端标签</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {remoteTags.map(([tagName, target]) => (
                 <span

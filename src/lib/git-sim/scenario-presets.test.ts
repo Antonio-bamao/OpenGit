@@ -30,6 +30,18 @@ describe("getScenarioPreset", () => {
     expect(preset.history[0]?.output).toContain("回退");
   });
 
+  it("starts the conflict scenario from a repository where local and remote edits diverged on the same file", () => {
+    const preset = getScenarioPreset("conflict-resolution");
+
+    expect(preset.initialCommand).toBe("git pull");
+    expect(preset.gitState.initialized).toBe(true);
+    expect(preset.gitState.branch).toBe("main");
+    expect(preset.gitState.head).toBe("c000002");
+    expect(preset.gitState.remoteBranchHeads.main).toBe("c000003");
+    expect(preset.gitState.conflictFiles).toEqual([]);
+    expect(preset.history[0]?.output).toContain("冲突");
+  });
+
   it("starts the release scenario from a repository ready to branch and tag", () => {
     const preset = getScenarioPreset("release-management");
 
@@ -38,5 +50,18 @@ describe("getScenarioPreset", () => {
     expect(preset.gitState.head).toBe("c000001");
     expect(preset.gitState.remoteBranchHeads.main).toBe("c000001");
     expect(preset.history[0]?.output).toContain("发布");
+  });
+
+  it("starts the worktree scenario from an in-progress feature branch with hotfix still available", () => {
+    const preset = getScenarioPreset("worktree-parallel");
+
+    expect(preset.initialCommand).toBe("git worktree add ../hotfix main");
+    expect(preset.gitState.initialized).toBe(true);
+    expect(preset.gitState.branch).toBe("feature/payment");
+    expect(preset.gitState.head).toBe("c000002");
+    expect(preset.gitState.branchHeads.main).toBe("c000001");
+    expect(preset.gitState.branchHeads["feature/payment"]).toBe("c000002");
+    expect(preset.gitState.worktrees).toEqual([]);
+    expect(preset.history[0]?.output).toContain("worktree");
   });
 });

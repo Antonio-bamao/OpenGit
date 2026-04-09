@@ -1,5 +1,7 @@
 import { parseGitCommand } from "./command-parser";
-import type { CommandResult, GitCommit, GitFile, GitState } from "./types";
+import type { CommandResult, GitCommit, GitFile, GitState, GitWorktree } from "./types";
+
+const MAIN_WORKTREE_PATH = "/open-git";
 
 const initialFiles: GitFile[] = [
   { path: "README.md", status: "untracked" },
@@ -19,7 +21,16 @@ export function createInitialGitState(): GitState {
     commits: [],
     remoteCommits: [],
     remoteBranchHeads: {},
-    remoteTags: {}
+    remoteTags: {},
+    worktrees: [],
+    worktreeAdded: false,
+    worktreeListInspected: false,
+    worktreeStatusChecked: false,
+    conflictFiles: [],
+    conflictDetected: false,
+    conflictResolved: false,
+    conflictStatusChecked: false,
+    mergeTargetHash: null
   };
 }
 
@@ -62,6 +73,8 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
       return handleBranchCommand(state, command.args);
     case "tag":
       return handleTagCommand(state, command.args);
+    case "worktree":
+      return handleWorktreeCommand(state, command.args);
     case "switch":
       return switchBranch(state, command.args);
     case "checkout":
@@ -80,7 +93,7 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前覆盖 clone、init、status、add、commit、log、diff、restore、reset、revert、branch、tag、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 clone、init、status、add、commit、log、diff、restore、reset、revert、branch、tag、worktree、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
         }
       };
   }
@@ -123,7 +136,16 @@ function cloneRepository(state: GitState, args: string[]): CommandResult {
       commits: [commit],
       remoteCommits: [{ ...commit, files: [...commit.files] }],
       remoteBranchHeads: { main: commit.hash },
-      remoteTags: {}
+      remoteTags: {},
+      worktrees: [],
+      worktreeAdded: false,
+      worktreeListInspected: false,
+      worktreeStatusChecked: false,
+      conflictFiles: [],
+      conflictDetected: false,
+      conflictResolved: false,
+      conflictStatusChecked: false,
+      mergeTargetHash: null
     },
     output: `Cloning into '${repositoryName}'...\nremote: Enumerating objects: 3, done.\nReceiving objects: 100% (3/3), done.`,
     effect: {
@@ -151,21 +173,52 @@ function showStatus(state: GitState): CommandResult {
     return notARepository(state);
   }
 
-  const staged = state.files.filter((file) => file.status === "staged");
-  const untracked = state.files.filter((file) => file.status === "untracked");
-  const modified = state.files.filter((file) => file.status === "modified");
+  const nextState = {
+    ...state,
+    worktreeStatusChecked: state.worktrees.length > 0 ? true : state.worktreeStatusChecked,
+    conflictStatusChecked: state.conflictDetected ? true : state.conflictStatusChecked
+  };
+
+  if (nextState.conflictFiles.length > 0) {
+    return {
+      state: nextState,
+      output: [
+        `On branch ${nextState.branch}`,
+        "You have unmerged paths.",
+        '  (fix conflicts and run "git commit")',
+        "",
+        "Unmerged paths:",
+        ...nextState.conflictFiles.map((filePath) => `  both modified:   ${filePath}`)
+      ].join("\n")
+    };
+  }
+
+  if (nextState.mergeTargetHash) {
+    return {
+      state: nextState,
+      output: [
+        `On branch ${nextState.branch}`,
+        "All conflicts fixed but you are still merging.",
+        '  (use "git commit" to conclude merge)'
+      ].join("\n")
+    };
+  }
+
+  const staged = nextState.files.filter((file) => file.status === "staged");
+  const untracked = nextState.files.filter((file) => file.status === "untracked");
+  const modified = nextState.files.filter((file) => file.status === "modified");
 
   if (staged.length === 0 && untracked.length === 0 && modified.length === 0) {
     return {
-      state,
-      output: `On branch ${state.branch}\nnothing to commit, working tree clean`
+      state: nextState,
+      output: `On branch ${nextState.branch}\nnothing to commit, working tree clean`
     };
   }
 
   return {
-    state,
+    state: nextState,
     output: [
-      `On branch ${state.branch}`,
+      `On branch ${nextState.branch}`,
       staged.length > 0 ? `Changes to be committed:\n${formatFiles(staged)}` : "",
       modified.length > 0 ? `Changes not staged for commit:\n${formatFiles(modified)}` : "",
       untracked.length > 0 ? `Untracked files:\n${formatFiles(untracked)}` : ""
@@ -182,6 +235,8 @@ function addFiles(state: GitState, args: string[]): CommandResult {
 
   const target = args[0] ?? ".";
   const selectedFiles = state.files.filter((file) => target === "." || target === file.path);
+  const selectedConflictFiles = state.conflictFiles.filter((filePath) => target === "." || target === filePath);
+  const remainingConflictFiles = state.conflictFiles.filter((filePath) => !selectedConflictFiles.includes(filePath));
   const files = state.files.map((file) => {
     if (target === "." || target === file.path) {
       return { ...file, status: "staged" as const };
@@ -192,7 +247,12 @@ function addFiles(state: GitState, args: string[]): CommandResult {
   const stagedCount = selectedFiles.length;
 
   return {
-    state: { ...state, files },
+    state: {
+      ...state,
+      files,
+      conflictFiles: remainingConflictFiles,
+      conflictResolved: state.conflictResolved || (state.conflictDetected && remainingConflictFiles.length === 0)
+    },
     output: `added ${stagedCount} ${pluralize("file", stagedCount)} to the staging area`,
     effect: {
       type: "stage",
@@ -208,6 +268,13 @@ function commitFiles(state: GitState, args: string[]): CommandResult {
     return notARepository(state);
   }
 
+  if (state.conflictFiles.length > 0) {
+    return {
+      state,
+      output: "error: Committing is not possible because you have unmerged files.\nhint: Fix them up in the work tree, and then use 'git add <file>' as appropriate to mark resolution."
+    };
+  }
+
   const staged = state.files.filter((file) => file.status === "staged");
   if (staged.length === 0) {
     return {
@@ -217,7 +284,7 @@ function commitFiles(state: GitState, args: string[]): CommandResult {
   }
 
   const message = getCommitMessage(args);
-  const hash = createCommitHash(state.commits.length + 1);
+  const hash = createCommitHash(getNextCommitSeed(state));
   const commit: GitCommit = {
     hash,
     message,
@@ -238,7 +305,8 @@ function commitFiles(state: GitState, args: string[]): CommandResult {
         ...state.branchHeads,
         [state.branch]: hash
       },
-      commits: [commit, ...state.commits]
+      commits: [commit, ...state.commits],
+      mergeTargetHash: null
     },
     output: `[${state.branch} ${hash}] ${message}\n ${staged.length} files changed`,
     effect: {
@@ -406,7 +474,7 @@ function revertCommit(state: GitState, args: string[]): CommandResult {
     };
   }
 
-  const hash = createCommitHash(state.commits.length + 1);
+  const hash = createCommitHash(getNextCommitSeed(state));
   const message = `Revert "${targetCommit.message}"`;
   const commit: GitCommit = {
     hash,
@@ -628,6 +696,31 @@ function handleTagCommand(state: GitState, args: string[]): CommandResult {
   };
 }
 
+function handleWorktreeCommand(state: GitState, args: string[]): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  const subcommand = args[0];
+
+  if (subcommand === "add") {
+    return addWorktree(state, args.slice(1));
+  }
+
+  if (subcommand === "list") {
+    return listWorktrees(state);
+  }
+
+  if (subcommand === "remove") {
+    return removeWorktree(state, args.slice(1));
+  }
+
+  return {
+    state,
+    output: "OpenGit MVP currently supports `git worktree add <path> <branch>`, `git worktree list`, and `git worktree remove <path>`."
+  };
+}
+
 function switchBranch(state: GitState, args: string[]): CommandResult {
   if (!state.initialized) {
     return notARepository(state);
@@ -642,6 +735,14 @@ function switchBranch(state: GitState, args: string[]): CommandResult {
     return {
       state,
       output: `fatal: invalid reference: ${branchName ?? ""}`.trim()
+    };
+  }
+
+  const branchOwner = findLinkedWorktreeByBranch(state, branchName);
+  if (branchOwner) {
+    return {
+      state,
+      output: `fatal: '${branchName}' is already checked out at '${branchOwner.path}'`
     };
   }
 
@@ -798,6 +899,35 @@ function pullCommits(state: GitState): CommandResult {
     };
   }
 
+  const conflictPaths = getPullConflictPaths(state, remoteCommit);
+  if (conflictPaths.length > 0) {
+    return {
+      state: {
+        ...state,
+        files: state.files.map((file) =>
+          conflictPaths.includes(file.path) ? { ...file, status: "conflicted" as const } : file
+        ),
+        conflictFiles: conflictPaths,
+        conflictDetected: true,
+        conflictResolved: false,
+        conflictStatusChecked: false,
+        mergeTargetHash: remoteHead
+      },
+      output: [
+        "From /open-git/origin",
+        `Auto-merging ${conflictPaths[0]}`,
+        `CONFLICT (content): Merge conflict in ${conflictPaths[0]}`,
+        "Automatic merge failed; fix conflicts and then commit the result."
+      ].join("\n"),
+      effect: {
+        type: "pull",
+        from: "remote",
+        to: "local",
+        filePaths: conflictPaths
+      }
+    };
+  }
+
   if (remoteCommit.parentHash !== state.head) {
     return {
       state,
@@ -849,6 +979,15 @@ function getCommitMessage(args: string[]): string {
 
 function createCommitHash(seed: number): string {
   return `c${seed.toString().padStart(6, "0")}`;
+}
+
+function getNextCommitSeed(state: GitState): number {
+  const hashes = [...state.commits, ...state.remoteCommits]
+    .map((commit) => Number.parseInt(commit.hash.slice(1), 10))
+    .filter((hash) => Number.isFinite(hash));
+
+  const maxHash = hashes.length > 0 ? Math.max(...hashes) : 0;
+  return maxHash + 1;
 }
 
 function getRepositoryName(remoteUrl: string): string {
@@ -929,4 +1068,143 @@ function dedupeCommits(commits: GitCommit[]): GitCommit[] {
     seen.add(commit.hash);
     return true;
   });
+}
+
+function addWorktree(state: GitState, args: string[]): CommandResult {
+  const path = args[0];
+  const branchName = args[1];
+
+  if (!path) {
+    return {
+      state,
+      output: "fatal: path required"
+    };
+  }
+
+  if (!branchName) {
+    return {
+      state,
+      output: "fatal: branch name required"
+    };
+  }
+
+  if (!state.branches.includes(branchName)) {
+    return {
+      state,
+      output: `fatal: invalid reference: ${branchName}`
+    };
+  }
+
+  if (path === MAIN_WORKTREE_PATH || state.worktrees.some((worktree) => worktree.path === path)) {
+    return {
+      state,
+      output: `fatal: '${path}' is already registered as a worktree`
+    };
+  }
+
+  const existingOwner =
+    branchName === state.branch ? { path: MAIN_WORKTREE_PATH } : findLinkedWorktreeByBranch(state, branchName);
+
+  if (existingOwner) {
+    return {
+      state,
+      output: `fatal: '${branchName}' is already checked out at '${existingOwner.path}'`
+    };
+  }
+
+  const head = state.branchHeads[branchName] ?? null;
+  const commit = head ? state.commits.find((entry) => entry.hash === head) : undefined;
+  const worktree: GitWorktree = {
+    path,
+    branch: branchName,
+    head
+  };
+
+  return {
+    state: {
+      ...state,
+      worktrees: [...state.worktrees, worktree],
+      worktreeAdded: true,
+      worktreeListInspected: false,
+      worktreeStatusChecked: false
+    },
+    output: [
+      `Preparing worktree (checking out '${branchName}')`,
+      head ? `HEAD is now at ${head} ${commit?.message ?? branchName}` : `branch '${branchName}' has no commits yet`
+    ].join("\n"),
+    effect: {
+      type: "worktree"
+    }
+  };
+}
+
+function listWorktrees(state: GitState): CommandResult {
+  const lines = [
+    formatWorktreeLine({
+      path: MAIN_WORKTREE_PATH,
+      branch: state.branch,
+      head: state.head
+    }),
+    ...state.worktrees.map((worktree) => formatWorktreeLine(worktree))
+  ];
+
+  return {
+    state: {
+      ...state,
+      worktreeListInspected: true
+    },
+    output: lines.join("\n")
+  };
+}
+
+function removeWorktree(state: GitState, args: string[]): CommandResult {
+  const path = args[0];
+
+  if (!path) {
+    return {
+      state,
+      output: "fatal: path required"
+    };
+  }
+
+  const exists = state.worktrees.some((worktree) => worktree.path === path);
+  if (!exists) {
+    return {
+      state,
+      output: `fatal: '${path}' is not a working tree`
+    };
+  }
+
+  return {
+    state: {
+      ...state,
+      worktrees: state.worktrees.filter((worktree) => worktree.path !== path)
+    },
+    output: `Removed worktree '${path}'.`,
+    effect: {
+      type: "worktree"
+    }
+  };
+}
+
+function formatWorktreeLine(worktree: GitWorktree): string {
+  return `${worktree.path} ${worktree.head ?? "empty"} [${worktree.branch}]`;
+}
+
+function findLinkedWorktreeByBranch(state: GitState, branchName: string): GitWorktree | undefined {
+  return state.worktrees.find((worktree) => worktree.branch === branchName);
+}
+
+function getPullConflictPaths(state: GitState, remoteCommit: GitCommit): string[] {
+  const currentCommit = state.commits.find((commit) => commit.hash === state.head);
+  if (!currentCommit || !currentCommit.parentHash) {
+    return [];
+  }
+
+  if (remoteCommit.parentHash !== currentCommit.parentHash) {
+    return [];
+  }
+
+  const remoteFiles = new Set(remoteCommit.files);
+  return currentCommit.files.filter((filePath) => remoteFiles.has(filePath));
 }

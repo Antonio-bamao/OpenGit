@@ -1,4 +1,4 @@
-export type GitFileStatus = "untracked" | "modified" | "staged" | "tracked";
+export type GitFileStatus = "untracked" | "modified" | "staged" | "tracked" | "conflicted";
 
 export interface GitFile {
   path: string;
@@ -11,6 +11,12 @@ export interface GitCommit {
   files: string[];
   branch: string;
   parentHash: string | null;
+}
+
+export interface GitWorktree {
+  path: string;
+  branch: string;
+  head: string | null;
 }
 
 export interface GitHint {
@@ -30,6 +36,15 @@ export interface GitState {
   remoteCommits: GitCommit[];
   remoteBranchHeads: Record<string, string | null>;
   remoteTags: Record<string, string | null>;
+  worktrees: GitWorktree[];
+  worktreeAdded: boolean;
+  worktreeListInspected: boolean;
+  worktreeStatusChecked: boolean;
+  conflictFiles: string[];
+  conflictDetected: boolean;
+  conflictResolved: boolean;
+  conflictStatusChecked: boolean;
+  mergeTargetHash: string | null;
 }
 
 export interface GitCommand {
@@ -59,7 +74,8 @@ export type GitFlowEffectType =
   | "switch"
   | "reset"
   | "revert"
-  | "tag";
+  | "tag"
+  | "worktree";
 
 export interface GitFlowEffect {
   type: GitFlowEffectType;

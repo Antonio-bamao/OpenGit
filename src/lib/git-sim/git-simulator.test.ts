@@ -290,4 +290,94 @@ describe("executeGitCommand", () => {
     expect(result.effect?.type).toBe("push");
     expect(result.state.remoteTags["v1.0.0"]).toBe("c000001");
   });
+
+  it("adds, lists, and removes linked worktrees while keeping branch ownership exclusive", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "main base"').state;
+    state = executeGitCommand(state, "git switch -c feature/payment").state;
+
+    let result = executeGitCommand(state, "git worktree add ../hotfix main");
+    state = result.state;
+
+    expect(result.output).toContain("Preparing worktree");
+    expect(result.output).toContain("main");
+    expect(result.state.worktrees).toEqual([
+      {
+        path: "../hotfix",
+        branch: "main",
+        head: "c000001"
+      }
+    ]);
+    expect(result.state.branch).toBe("feature/payment");
+
+    result = executeGitCommand(state, "git worktree list");
+    expect(result.output).toContain("/open-git");
+    expect(result.output).toContain("[feature/payment]");
+    expect(result.output).toContain("../hotfix");
+    expect(result.output).toContain("[main]");
+
+    result = executeGitCommand(state, "git switch main");
+    expect(result.output).toContain("fatal: 'main' is already checked out at '../hotfix'");
+
+    result = executeGitCommand(state, "git worktree remove ../hotfix");
+    state = result.state;
+    expect(result.output).toContain("Removed worktree '../hotfix'");
+    expect(state.worktrees).toEqual([]);
+  });
+
+  it("simulates a pull conflict and lets the user resolve it with add plus commit", () => {
+    let state = executeGitCommand(
+      createInitialGitState(),
+      "git clone https://github.com/opengit/example.git"
+    ).state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "local edit"').state;
+
+    const remoteCommit = {
+      hash: "c000003",
+      message: "teammate edit",
+      files: ["README.md"],
+      branch: "main",
+      parentHash: "c000001"
+    };
+    state = {
+      ...state,
+      remoteCommits: [remoteCommit, ...state.remoteCommits],
+      remoteBranchHeads: {
+        ...state.remoteBranchHeads,
+        main: remoteCommit.hash
+      }
+    };
+
+    let result = executeGitCommand(state, "git pull");
+    state = result.state;
+
+    expect(result.output).toContain("CONFLICT (content)");
+    expect(result.output).toContain("README.md");
+    expect(result.effect?.type).toBe("pull");
+    expect(state.files.find((file) => file.path === "README.md")?.status).toBe("conflicted");
+    expect(state.conflictFiles).toEqual(["README.md"]);
+    expect(state.mergeTargetHash).toBe("c000003");
+
+    result = executeGitCommand(state, "git status");
+    state = result.state;
+    expect(result.output).toContain("You have unmerged paths");
+    expect(result.output).toContain("both modified");
+    expect(state.conflictStatusChecked).toBe(true);
+
+    result = executeGitCommand(state, "git add README.md");
+    state = result.state;
+    expect(state.files.find((file) => file.path === "README.md")?.status).toBe("staged");
+    expect(state.conflictFiles).toEqual([]);
+    expect(state.conflictResolved).toBe(true);
+
+    result = executeGitCommand(state, 'git commit -m "resolve conflict"');
+    state = result.state;
+    expect(result.output).toContain("resolve conflict");
+    expect(state.head).toBe("c000004");
+    expect(state.conflictFiles).toEqual([]);
+    expect(state.mergeTargetHash).toBeNull();
+    expect(state.files.find((file) => file.path === "README.md")?.status).toBe("tracked");
+  });
 });

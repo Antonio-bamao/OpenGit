@@ -4,5 +4,6 @@ export const statusClasses: Record<GitFileStatus, string> = {
   untracked: "border-rose-200 bg-rose-50 text-rose-700",
   modified: "border-amber-200 bg-amber-50 text-amber-800",
   staged: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  tracked: "border-slate-200 bg-slate-100 text-slate-700"
+  tracked: "border-slate-200 bg-slate-100 text-slate-700",
+  conflicted: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800"
 };

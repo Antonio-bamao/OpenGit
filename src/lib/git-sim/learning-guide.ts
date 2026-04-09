@@ -43,12 +43,20 @@ export function getLearningScenario(state: GitState, selectedScenarioId?: string
     return getTeamCollaborationScenario(state);
   }
 
+  if (selectedScenarioId === "conflict-resolution") {
+    return getConflictResolutionScenario(state);
+  }
+
   if (selectedScenarioId === "version-rollback") {
     return getVersionRollbackScenario(state);
   }
 
   if (selectedScenarioId === "release-management") {
     return getReleaseManagementScenario(state);
+  }
+
+  if (selectedScenarioId === "worktree-parallel") {
+    return getWorktreeParallelScenario(state);
   }
 
   if (selectedScenarioId === "solo-project") {
@@ -130,6 +138,51 @@ export function getVersionRollbackScenario(state: GitState): LearningScenario {
   });
 }
 
+export function getConflictResolutionScenario(state: GitState): LearningScenario {
+  const hasConflict = state.conflictDetected;
+  const inspectedConflict = state.conflictStatusChecked;
+  const resolvedConflict = state.conflictResolved;
+  const createdResolutionCommit = state.commits[0]?.message === "resolve conflict" && state.mergeTargetHash === null;
+
+  return buildLearningScenario({
+    id: "conflict-resolution",
+    title: "处理冲突",
+    summary: "让本地改动和 teammate 的远端改动在同一文件上相撞，再亲手完成一次冲突解决。",
+    objective: "看清 pull 冲突不是失败终点，而是一次需要检查、标记解决并提交收尾的合并过程。",
+    successCriteria: "能触发一次 pull 冲突、看到 unmerged paths、用 git add 标记已解决，并写出一条 resolve conflict 提交。",
+    checklist: [
+      {
+        id: "trigger-conflict",
+        title: "触发 pull 冲突",
+        command: "git pull",
+        goal: "把本地和远端对同一文件的竞争修改拉到台面上。",
+        completed: hasConflict
+      },
+      {
+        id: "inspect-conflict",
+        title: "查看未合并路径",
+        command: "git status",
+        goal: "确认 README.md 进入 unmerged 状态，理解 Git 在等你手动处理。",
+        completed: inspectedConflict
+      },
+      {
+        id: "mark-resolved",
+        title: "标记冲突已解决",
+        command: "git add README.md",
+        goal: "把手动解决后的文件重新放回暂存区，告诉 Git 这份冲突已经处理完。",
+        completed: resolvedConflict
+      },
+      {
+        id: "finish-merge",
+        title: "提交冲突解决结果",
+        command: 'git commit -m "resolve conflict"',
+        goal: "用一条清晰的提交结束这次冲突处理流程。",
+        completed: createdResolutionCommit
+      }
+    ]
+  });
+}
+
 export function getReleaseManagementScenario(state: GitState): LearningScenario {
   const hasReleaseBranch = state.branches.includes("release");
   const onReleaseBranch = state.branch === "release";
@@ -170,6 +223,53 @@ export function getReleaseManagementScenario(state: GitState): LearningScenario 
         command: "git push --tags",
         goal: "让远端仓库也拥有同一个发布标签。",
         completed: pushedTag
+      }
+    ]
+  });
+}
+
+export function getWorktreeParallelScenario(state: GitState): LearningScenario {
+  const hotfixTree = state.worktrees.find((worktree) => worktree.path === "../hotfix");
+  const hasHotfixTree = Boolean(hotfixTree);
+  const createdHotfixTree = state.worktreeAdded;
+  const listedWorktrees = state.worktreeListInspected;
+  const confirmedFeatureBranch = state.worktreeStatusChecked && state.branch === "feature/payment";
+  const cleanedUp = !hasHotfixTree && state.worktreeListInspected && state.worktreeStatusChecked;
+
+  return buildLearningScenario({
+    id: "worktree-parallel",
+    title: "Worktree 多分支并行开发",
+    summary: "保留正在进行的 feature/payment，同时额外拉出一个 hotfix 工作目录处理紧急问题。",
+    objective: "理解 worktree 如何让同一仓库在不同目录里并行 checkout 多个分支，而不打断当前开发上下文。",
+    successCriteria: "主工作目录仍停留在 feature/payment，额外挂载过 ../hotfix -> main，并能在演示完成后安全移除。",
+    checklist: [
+      {
+        id: "create-hotfix-tree",
+        title: "拉出 hotfix 工作目录",
+        command: "git worktree add ../hotfix main",
+        goal: "在不离开当前 feature/payment 的前提下，把 main 放到单独目录里准备修 hotfix。",
+        completed: createdHotfixTree
+      },
+      {
+        id: "inspect-linked-trees",
+        title: "查看所有 worktree",
+        command: "git worktree list",
+        goal: "确认主目录和 ../hotfix 正在共享同一个仓库对象库，但分别占有不同分支。",
+        completed: listedWorktrees
+      },
+      {
+        id: "confirm-feature-stays-open",
+        title: "确认当前分支未被打断",
+        command: "git status",
+        goal: "验证主工作目录仍停在 feature/payment，没有被热修分支抢走上下文。",
+        completed: confirmedFeatureBranch
+      },
+      {
+        id: "remove-hotfix-tree",
+        title: "清理临时 hotfix 目录",
+        command: "git worktree remove ../hotfix",
+        goal: "在热修演示结束后移除额外 worktree，回到单工作目录状态。",
+        completed: cleanedUp
       }
     ]
   });

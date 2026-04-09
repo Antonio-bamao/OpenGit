@@ -156,3 +156,17 @@
 - 结果：release-management 现已成为 ready 场景，用户可从 /scenarios 直接进入发布管理练习；Playground 能模拟创建标签、推送标签，并在仓库洞察面板中看到 local tags 与 origin tags。
 - 验证：pnpm test 通过 8 个测试文件、37 个测试；pnpm lint 无警告；pnpm build 成功；curl -I http://127.0.0.1:3900/scenarios 返回 200；curl -I http://127.0.0.1:3900/playground?scenario=release-management&command=git%20branch%20release 返回 200。
 - 下一步：继续推进 worktree-parallel 或 conflict-resolution，让下一张 planned 卡升级为 ready。
+
+## 2026-04-09 21:22｜把 worktree-parallel 场景从 planned 推进到 ready
+- 目标：把 worktree-parallel 场景从 planned 推进到 ready
+- 动作：按 TDD 为 `git worktree add/list/remove`、worktree 场景 preset/catalog/view model/learning guide 写红灯测试；在 `git-simulator` 中加入 linked worktree 状态、分支占用校验，以及 `git worktree list` / `git status` 的学习进度标记；补齐 `worktree-parallel` 的预设仓库状态与学习路线；把 `/scenarios` 中的 worktree 卡片切换为 ready，并在 `RepositoryInsightPanel` 展示当前目录和 linked worktrees。
+- 结果：`worktree-parallel` 现已成为 ready 场景，用户可从 `/scenarios` 直接进入 feature/payment 开发中的仓库，练习 `git worktree add ../hotfix main`、查看 linked trees、确认当前分支未被打断，并在演示结束后移除临时 worktree。
+- 验证：`pnpm test` 通过 8 个测试文件、42 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/scenarios` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=worktree-parallel&command=git%20worktree%20add%20..%2Fhotfix%20main"` 返回 200。
+- 下一步：继续推进 `conflict-resolution`，补齐冲突态仓库预设、冲突提示和解决后的学习路线，让 `/scenarios` 中最后一张 planned 卡升级为 ready。
+
+## 2026-04-09 21:32｜把 conflict-resolution 场景从 planned 推进到 ready
+- 目标：把 conflict-resolution 场景从 planned 推进到 ready
+- 动作：按 TDD 为 `git pull` 冲突态、`git status` unmerged paths、`git add README.md` 标记已解决、`git commit -m "resolve conflict"` 收尾，以及 conflict 场景 preset/catalog/view model/learning guide 写红灯测试；在 `git-simulator` 中加入 conflicted 文件状态、冲突标记、合并中的状态追踪和冲突解决后的提交收口；把 `/scenarios` 中的 conflict 卡片切换为 ready，并让 Playground 面板显示 conflicted 状态。
+- 结果：`conflict-resolution` 现已成为 ready 场景，用户可从 `/scenarios` 直接进入一个“本地和远端都改了 README.md”的仓库，体验一次完整的 pull 冲突、检查 unmerged paths、标记解决并提交收尾的流程；至此全局计划中的六张核心场景卡都已进入 ready。
+- 验证：`pnpm test` 通过 8 个测试文件、47 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/scenarios` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=conflict-resolution&command=git%20pull"` 返回 200。
+- 下一步：从场景补齐切换到文档入口建设，优先推进 `/docs` 最小命令参考页面，并把现有场景命令和文档查阅打通。
