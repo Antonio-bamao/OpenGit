@@ -160,7 +160,14 @@ describe("git-docs", () => {
       title: "从零开始个人项目",
       badge: "推荐起点",
       emphasis: "primary",
+      pathIndex: 1,
+      pathTotal: 4,
       playgroundHref: "/playground?scenario=solo-project&command=git%20init",
+      nextScenario: {
+        id: "team-collab",
+        badge: "协作进阶",
+        primaryCommand: "git clone https://github.com/opengit/example.git"
+      },
       primaryDoc: {
         id: "init",
         detailHref: "/docs/init"
@@ -170,12 +177,19 @@ describe("git-docs", () => {
       title: "处理冲突",
       badge: "问题处理",
       emphasis: "secondary",
+      pathIndex: 3,
+      pathTotal: 4,
+      nextScenario: {
+        id: "version-rollback",
+        badge: "历史修复"
+      },
       primaryCommand: "git pull",
       primaryDoc: {
         id: "pull",
         detailHref: "/docs/pull"
       }
     });
+    expect(entries[3]?.nextScenario).toBeUndefined();
   });
 
   it("exposes featured scenario priority metadata for reuse across docs and scenarios", () => {

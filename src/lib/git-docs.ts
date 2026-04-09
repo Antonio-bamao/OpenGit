@@ -63,6 +63,19 @@ export interface FeaturedDocScenario {
   primaryCommand: string;
   playgroundHref: string;
   primaryDoc?: CommandDoc;
+  pathIndex: number;
+  pathTotal: number;
+  nextScenario?: FeaturedDocScenarioPreview;
+}
+
+export interface FeaturedDocScenarioPreview {
+  id: string;
+  title: string;
+  badge: string;
+  emphasis: FeaturedDocScenarioEmphasis;
+  primaryCommand: string;
+  playgroundHref: string;
+  primaryDoc?: CommandDoc;
 }
 
 const featuredScenarioMeta = [
@@ -359,14 +372,7 @@ export function getNextFeaturedScenarioForCommandDoc(docId: string): FeaturedDoc
 }
 
 export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
-  const featuredScenarioMeta = [
-    { id: "solo-project", badge: "推荐起点", emphasis: "primary" as const },
-    { id: "team-collab", badge: "协作进阶", emphasis: "secondary" as const },
-    { id: "conflict-resolution", badge: "问题处理", emphasis: "secondary" as const },
-    { id: "version-rollback", badge: "历史修复", emphasis: "secondary" as const }
-  ];
-
-  return featuredScenarioMeta
+  const featuredEntries = featuredScenarioMeta
     .map((entry) => {
       const scenario = scenarioCatalog.find((item) => item.id === entry.id);
       return scenario ? { scenario, meta: entry } : undefined;
@@ -378,8 +384,14 @@ export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
         scenario: (typeof scenarioCatalog)[number];
         meta: (typeof featuredScenarioMeta)[number];
       } => Boolean(entry)
-    )
-    .map(({ scenario, meta }) => ({
+    );
+
+  const pathTotal = featuredEntries.length;
+
+  return featuredEntries.map(({ scenario, meta }, index) => {
+    const nextEntry = featuredEntries[index + 1];
+
+    return {
       id: scenario.id,
       title: scenario.title,
       summary: scenario.summary,
@@ -388,8 +400,22 @@ export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
       emphasis: meta.emphasis,
       primaryCommand: scenario.primaryCommand,
       playgroundHref: scenario.playgroundHref,
-      primaryDoc: getCommandDocForInput(scenario.primaryCommand)
-    }));
+      primaryDoc: getCommandDocForInput(scenario.primaryCommand),
+      pathIndex: index + 1,
+      pathTotal,
+      nextScenario: nextEntry
+        ? {
+            id: nextEntry.scenario.id,
+            title: nextEntry.scenario.title,
+            badge: nextEntry.meta.badge,
+            emphasis: nextEntry.meta.emphasis,
+            primaryCommand: nextEntry.scenario.primaryCommand,
+            playgroundHref: nextEntry.scenario.playgroundHref,
+            primaryDoc: getCommandDocForInput(nextEntry.scenario.primaryCommand)
+          }
+        : undefined
+    };
+  });
 }
 
 export function getCommandDocBySlug(slug: string): CommandDoc | undefined {

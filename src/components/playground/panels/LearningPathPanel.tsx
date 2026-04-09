@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { LearningChecklistItem, LearningScenario } from "@/lib/git-sim/learning-guide";
 import { getDocsHrefForCommandInput, type CommandDoc, type FeaturedDocScenario } from "@/lib/git-docs";
+import type { ScenarioTransitionCallout } from "@/lib/git-sim/playground-view-model";
 
 interface LearningPathPanelProps {
   activeTask?: LearningChecklistItem;
@@ -8,7 +9,9 @@ interface LearningPathPanelProps {
   nextTask?: LearningChecklistItem;
   nextTaskDoc?: CommandDoc;
   upcomingNextScenario?: FeaturedDocScenario;
+  upcomingNextScenarioCallout?: ScenarioTransitionCallout;
   completionNextScenario?: FeaturedDocScenario;
+  completionNextScenarioCallout?: ScenarioTransitionCallout;
   checklist: LearningChecklistItem[];
   scenario: LearningScenario;
   onFillCommand: (command: string) => void;
@@ -20,7 +23,9 @@ export function LearningPathPanel({
   nextTask,
   nextTaskDoc,
   upcomingNextScenario,
+  upcomingNextScenarioCallout,
   completionNextScenario,
+  completionNextScenarioCallout,
   checklist,
   scenario,
   onFillCommand
@@ -141,40 +146,43 @@ export function LearningPathPanel({
               </div>
             </div>
           ) : null}
-          {!nextTask && upcomingNextScenario ? (
-            <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
-              <p className="font-semibold text-slate-950">完成这一步后，建议继续这张场景卡</p>
+          {!nextTask && upcomingNextScenario && upcomingNextScenarioCallout ? (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50/70 px-3 py-3 text-xs text-slate-600">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+                {upcomingNextScenarioCallout.eyebrow}
+              </p>
+              <p className="mt-2 font-semibold text-slate-950">{upcomingNextScenarioCallout.title}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span
                   className={`rounded-full px-2.5 py-1 ${
                     upcomingNextScenario.emphasis === "primary"
-                      ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                      : "border border-slate-200 bg-slate-50 text-slate-500"
+                      ? "border border-emerald-200 bg-white text-emerald-800"
+                      : "border border-amber-200 bg-white text-slate-600"
                   }`}
                 >
                   {upcomingNextScenario.badge}
                 </span>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+                <span className="rounded-full border border-amber-200 bg-white px-2.5 py-1">
                   {upcomingNextScenario.title}
                 </span>
               </div>
-              <p className="mt-3 leading-5">{upcomingNextScenario.summary}</p>
-              <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700">
+              <p className="mt-3 leading-5 text-slate-600">{upcomingNextScenario.summary}</p>
+              <p className="mt-3 rounded-md border border-amber-200 bg-white px-3 py-2 font-mono text-sm text-slate-700">
                 {upcomingNextScenario.primaryCommand}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Link
                   href={upcomingNextScenario.playgroundHref}
-                  className="inline-flex min-h-8 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                  className="inline-flex min-h-8 items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                 >
-                  完成后去这个场景
+                  {upcomingNextScenarioCallout.primaryActionLabel}
                 </Link>
                 {upcomingNextScenario.primaryDoc ? (
                   <Link
                     href={upcomingNextScenario.primaryDoc.detailHref}
-                    className="inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                    className="inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-300 bg-transparent px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-amber-400 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
                   >
-                    先看下一条命令
+                    {upcomingNextScenarioCallout.secondaryActionLabel}
                   </Link>
                 ) : null}
               </div>
@@ -182,16 +190,18 @@ export function LearningPathPanel({
           ) : null}
         </div>
       ) : null}
-      {!activeTask && scenario.isComplete && completionNextScenario ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Next Path</p>
+      {!activeTask && scenario.isComplete && completionNextScenario && completionNextScenarioCallout ? (
+        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-slate-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+            {completionNextScenarioCallout.eyebrow}
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <p className="text-lg font-semibold text-slate-950">这张场景卡已经完成，建议继续练下一张</p>
+            <p className="text-lg font-semibold text-slate-950">{completionNextScenarioCallout.title}</p>
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                 completionNextScenario.emphasis === "primary"
-                  ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border border-slate-200 bg-slate-50 text-slate-500"
+                  ? "border border-emerald-200 bg-white text-emerald-800"
+                  : "border border-slate-200 bg-white text-slate-500"
               }`}
             >
               {completionNextScenario.badge}
@@ -199,7 +209,7 @@ export function LearningPathPanel({
           </div>
           <p className="mt-3 text-sm font-semibold text-emerald-700">{completionNextScenario.title}</p>
           <p className="mt-2 leading-6 text-slate-600">{completionNextScenario.summary}</p>
-          <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700">
+          <p className="mt-3 rounded-md border border-emerald-200 bg-white px-3 py-2 font-mono text-sm text-slate-700">
             {completionNextScenario.primaryCommand}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -207,14 +217,14 @@ export function LearningPathPanel({
               href={completionNextScenario.playgroundHref}
               className="inline-flex min-h-9 items-center justify-center rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
             >
-              去下一个场景
+              {completionNextScenarioCallout.primaryActionLabel}
             </Link>
             {completionNextScenario.primaryDoc ? (
               <Link
                 href={completionNextScenario.primaryDoc.detailHref}
                 className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
               >
-                先看下一条命令
+                {completionNextScenarioCallout.secondaryActionLabel}
               </Link>
             ) : null}
           </div>

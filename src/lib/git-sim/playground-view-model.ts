@@ -55,6 +55,14 @@ export interface RemoteRefViewModel {
   isCurrentBranch: boolean;
 }
 
+export interface ScenarioTransitionCallout {
+  tone: "preview" | "complete";
+  eyebrow: string;
+  title: string;
+  primaryActionLabel: string;
+  secondaryActionLabel: string;
+}
+
 export type ZoneCounts = Record<GitFlowZone, number>;
 
 export type FlowItemsByZone = Record<GitFlowZone, FlowItem[]>;
@@ -69,7 +77,9 @@ export interface PlaygroundViewModel {
   nextTask: LearningChecklistItem | undefined;
   nextTaskDoc: CommandDoc | undefined;
   upcomingNextScenario: FeaturedDocScenario | undefined;
+  upcomingNextScenarioCallout: ScenarioTransitionCallout | undefined;
   completionNextScenario: FeaturedDocScenario | undefined;
+  completionNextScenarioCallout: ScenarioTransitionCallout | undefined;
   headCommit: string;
   remoteHead: string;
   syncStatus: BranchSyncStatus;
@@ -100,8 +110,14 @@ export function buildPlaygroundViewModel(
     !learningScenario.isComplete && activeTaskIndex >= 0 && activeTaskIndex === learningChecklist.length - 1
       ? getNextFeaturedScenarioForScenarioId(learningScenario.id)
       : undefined;
+  const upcomingNextScenarioCallout = upcomingNextScenario
+    ? createScenarioTransitionCallout("preview")
+    : undefined;
   const completionNextScenario = learningScenario.isComplete
     ? getNextFeaturedScenarioForScenarioId(learningScenario.id)
+    : undefined;
+  const completionNextScenarioCallout = completionNextScenario
+    ? createScenarioTransitionCallout("complete")
     : undefined;
   const syncStatus = buildBranchSyncStatus(gitState);
   const remoteRefs = buildRemoteRefs(gitState);
@@ -146,7 +162,9 @@ export function buildPlaygroundViewModel(
     nextTask,
     nextTaskDoc,
     upcomingNextScenario,
+    upcomingNextScenarioCallout,
     completionNextScenario,
+    completionNextScenarioCallout,
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
     syncStatus,
@@ -154,6 +172,26 @@ export function buildPlaygroundViewModel(
     isFlowActive: (from, to) =>
       (latestEffect?.from === from && latestEffect.to === to) ||
       (latestEffect?.from === to && latestEffect.to === from)
+  };
+}
+
+function createScenarioTransitionCallout(tone: ScenarioTransitionCallout["tone"]): ScenarioTransitionCallout {
+  if (tone === "preview") {
+    return {
+      tone,
+      eyebrow: "下一站预告",
+      title: "完成这一步后，建议继续这张场景卡",
+      primaryActionLabel: "完成后去这个场景",
+      secondaryActionLabel: "先看下一条命令"
+    };
+  }
+
+  return {
+    tone,
+    eyebrow: "Next Path",
+    title: "这张场景卡已完成，建议继续练下一张",
+    primaryActionLabel: "去下一个场景",
+    secondaryActionLabel: "先看下一条命令"
   };
 }
 

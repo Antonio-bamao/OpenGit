@@ -265,3 +265,17 @@
 - 结果：现在不只 docs 详情页知道“练完这条去哪”，Playground 在场景完成后也会直接给出下一张推荐场景卡和下一条命令入口，教学闭环又顺了一层。
 - 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件 22 个测试；`pnpm test` 通过 9 个测试文件 62 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20push"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：把“下一站推荐”继续前置到接近完成的时机，或者在 `/scenarios` 里明确标出建议练习顺序。
+
+## 2026-04-10 01:42｜把 docs/playground 已有的 newcomer path 继续扩到 /scenarios 页面，让场景总览也能明确提示练习顺序与下一站。
+- 目标：把 docs/playground 已有的 newcomer path 继续扩到 /scenarios 页面，让场景总览也能明确提示练习顺序与下一站。
+- 动作：按 TDD 先在 src/lib/git-docs.test.ts 为 featured 场景补上路径顺序与 nextScenario 断言；随后在 src/lib/git-docs.ts 中把 featured 场景元数据升级为共享的 pathIndex/pathTotal/nextScenario 结构；最后更新 src/app/scenarios/page.tsx，复用同一份 helper 渲染路径序号、推荐 badge 和 Next Path 提示。
+- 结果：/scenarios 现在会提示第一次来建议按 推荐起点 -> 协作进阶 -> 问题处理 -> 历史修复 的顺序练习；四个 featured 场景卡片会显示自己位于路径中的第几站，并在适用时给出练完后的下一站和下一条命令入口。
+- 验证：pnpm test 62/62 通过；pnpm lint 通过；pnpm build 通过。
+- 下一步：继续收紧 Playground 中即将完成与已完成两种引导态的视觉层级，让预告态和完成态更容易被用户区分。
+
+## 2026-04-10 01:57｜把 Playground 里接近完成时的预告态和场景完成后的推荐态做成轻量但清楚的两种引导层级。
+- 目标：把 Playground 里接近完成时的预告态和场景完成后的推荐态做成轻量但清楚的两种引导层级。
+- 动作：按 TDD 先在 src/lib/git-sim/playground-view-model.test.ts 为 upcoming/completion 两种 callout 状态补上失败断言；随后在 src/lib/git-sim/playground-view-model.ts 中新增 preview/complete 两种 ScenarioTransitionCallout；再更新 src/components/playground/PlaygroundShell.tsx 与 src/components/playground/panels/LearningPathPanel.tsx，让预告态使用更轻的 amber 提示卡和次级 CTA，完成态使用更明确的 emerald 完成卡与主 CTA。
+- 结果：Playground 现在会把临近完成时的推荐呈现为低一层的‘下一站预告’，而把场景完成后的推荐呈现为更明确的‘Next Path’ 收尾卡；两者继续复用同一套推荐数据，但在文案、底色和按钮主次上已经能一眼区分。
+- 验证：pnpm test 62/62 通过；pnpm lint 通过；pnpm build 通过。
+- 下一步：继续打磨 conflict-resolution、release-management、worktree-parallel 等进阶场景的提示文案与视觉细节，提升问题处理、发布和并行开发的教学解释力。

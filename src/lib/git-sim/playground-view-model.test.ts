@@ -42,6 +42,8 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.learningScenario.title).toBe("从零开始个人项目");
     expect(viewModel.learningScenario.progressLabel).toBe("2/5");
     expect(viewModel.upcomingNextScenario).toBeUndefined();
+    expect(viewModel.upcomingNextScenarioCallout).toBeUndefined();
+    expect(viewModel.completionNextScenarioCallout).toBeUndefined();
     expect(viewModel.headCommit).toBe("no commits");
     expect(viewModel.remoteHead).toBe("not pushed");
     expect(viewModel.syncStatus.summary).toBe("no remote");
@@ -60,6 +62,14 @@ describe("buildPlaygroundViewModel", () => {
         detailHref: "/docs/clone"
       }
     });
+    expect(viewModel.upcomingNextScenarioCallout).toEqual({
+      tone: "preview",
+      eyebrow: "下一站预告",
+      title: "完成这一步后，建议继续这张场景卡",
+      primaryActionLabel: "完成后去这个场景",
+      secondaryActionLabel: "先看下一条命令"
+    });
+    expect(viewModel.completionNextScenarioCallout).toBeUndefined();
 
     const pushResult = executeGitCommand(state, "git push");
     viewModel = buildPlaygroundViewModel(pushResult.state, pushResult.effect);
@@ -72,6 +82,7 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.nextTask).toBeUndefined();
     expect(viewModel.nextTaskDoc).toBeUndefined();
     expect(viewModel.upcomingNextScenario).toBeUndefined();
+    expect(viewModel.upcomingNextScenarioCallout).toBeUndefined();
     expect(viewModel.completionNextScenario).toMatchObject({
       id: "team-collab",
       emphasis: "secondary",
@@ -79,6 +90,13 @@ describe("buildPlaygroundViewModel", () => {
         id: "clone",
         detailHref: "/docs/clone"
       }
+    });
+    expect(viewModel.completionNextScenarioCallout).toEqual({
+      tone: "complete",
+      eyebrow: "Next Path",
+      title: "这张场景卡已完成，建议继续练下一张",
+      primaryActionLabel: "去下一个场景",
+      secondaryActionLabel: "先看下一条命令"
     });
     expect(viewModel.headCommit).toBe("c000001");
     expect(viewModel.remoteHead).toBe("c000001");

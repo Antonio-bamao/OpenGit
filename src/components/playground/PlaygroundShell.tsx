@@ -119,7 +119,9 @@ export function PlaygroundShell({
             nextTask={viewModel.nextTask}
             nextTaskDoc={viewModel.nextTaskDoc}
             upcomingNextScenario={viewModel.upcomingNextScenario}
+            upcomingNextScenarioCallout={viewModel.upcomingNextScenarioCallout}
             completionNextScenario={viewModel.completionNextScenario}
+            completionNextScenarioCallout={viewModel.completionNextScenarioCallout}
             checklist={viewModel.learningChecklist}
             scenario={viewModel.learningScenario}
             onFillCommand={setInput}
