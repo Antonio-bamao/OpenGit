@@ -2,23 +2,23 @@
 
 ## 当前优先级
 
-1. 保持 `/playground`、`/scenarios`、`/docs` 三个核心入口稳定可运行，继续把教学闭环收紧。
-2. 继续打磨当前 Playground 任务与 docs 的双向联动，例如把“当前步骤完成后推荐阅读/练习什么”的提示做得更显眼、更好点进。
-3. 继续增强 `/docs` 总览与详情页的练习引导，让“查看命令”“跳到具体场景步骤”“回到当前任务”之间切换更自然，并让高频场景入口更有层次。
-4. 打磨冲突、标签、worktree 等场景的可视化细节与提示文案，提升教学解释力。
-5. 评估是否引入 `isomorphic-git + lightning-fs` 的更真实语义，或继续保持受控状态模型避免过早复杂化。
+1. 保持 `/playground`、`/scenarios`、`/docs` 三个核心入口稳定可用，继续收紧练习闭环。
+2. 统一 docs 快启入口和 Playground 学习面板里的场景优先级表达，让“推荐起点 / 协作进阶 / 问题处理 / 历史修复”在不同入口含义一致。
+3. 继续增强 `/docs/[slug]` 与 `/scenarios` 的回跳和引导，让用户更容易从命令解释回到合适练习场景。
+4. 打磨冲突、发布、worktree 等进阶场景的提示文案与可视化细节，提升教学解释力。
+5. 评估是否需要进一步下沉为更真实的 Git 语义实现；在当前阶段继续优先保持受控状态模型的教学清晰度。
 
 ## 暂缓任务
 
-- NextAuth.js、GitHub OAuth、Google OAuth。
-- PostgreSQL + Prisma。
-- Docker 沙盒和 dockerode。
-- GitHub 教学完整页面。
-- 完整 MDX/contentlayer 文档系统。
-- 完整 Git Graph 和引用指针图。
+- NextAuth.js、GitHub OAuth、Google OAuth
+- PostgreSQL + Prisma
+- Docker 沙箱和 `dockerode`
+- GitHub 教学完整页面
+- 完整 MDX/contentlayer 文档系统
+- 更完整的 Git Graph / refs 可视化
 
 ## 依赖关系
 
-- docs 更强导航应建立在当前 `/docs` 搜索、关键词别名、推荐场景入口、步骤级练习指引与 `/docs/[slug]` 详情页稳定后再扩展。
-- 场景到文档的联动依赖现有 scenario catalog、learning guide、playground view model 与 command 预填机制。
-- 更真实的 Git 引擎语义必须在 MVP 交互闭环与文档入口稳定后再评估引入。
+- Playground 与 docs 的双向引导依赖 `src/lib/git-docs.ts` 中的命令文档元数据持续单一来源。
+- 场景回跳依赖 `scenario-catalog`、`learning-guide`、`playground-view-model` 与命令预填机制保持同步。
+- 更真实的 Git 引擎语义应放在当前教学链路稳定之后再评估引入，避免过早复杂化。

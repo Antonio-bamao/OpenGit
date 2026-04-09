@@ -12,22 +12,38 @@ export function DocsScenarioQuickstart() {
         <p className="mt-3 leading-7 text-slate-600">
           如果你不是先找命令，而是想从真实任务直接进入，这里给你四条最常用的练习路径。
         </p>
+        <p className="mt-2 text-sm font-semibold text-slate-500">第一次来，建议先从“推荐起点”开始。</p>
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
         {scenarios.map((scenario) => (
           <article
             key={scenario.id}
-            className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)]"
+            className={`rounded-lg border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)] ${
+              scenario.emphasis === "primary"
+                ? "border-emerald-300 ring-1 ring-emerald-200 hover:border-emerald-400"
+                : "border-slate-200 hover:border-emerald-300"
+            }`}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-emerald-700">{scenario.title}</p>
                 <h3 className="mt-2 text-xl font-semibold text-slate-950">{scenario.summary}</h3>
               </div>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-500">
-                {scenario.id}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    scenario.emphasis === "primary"
+                      ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                      : "border border-slate-200 bg-slate-50 text-slate-500"
+                  }`}
+                >
+                  {scenario.badge}
+                </span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-500">
+                  {scenario.id}
+                </span>
+              </div>
             </div>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">{scenario.objective}</p>

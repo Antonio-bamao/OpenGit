@@ -226,3 +226,10 @@
 - 结果：`/docs` 现在不只是命令索引页，也有了“从零开始个人项目 / 加入团队项目 / 处理冲突 / 版本回退与修复”这四条高频练习路径的快捷入口；对不熟 Git 命令名、但知道自己要做什么任务的用户更友好。
 - 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、11 个测试；`pnpm test` 通过 9 个测试文件、58 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续增强这些入口的层次感，例如标出“最适合新手先练”的场景，或把 Playground 里的下一步推荐和 `/docs` 顶部入口做成同一套优先级。 
+## 2026-04-10 00:39 - 复用 docs 场景优先级到 Playground
+
+- 目标：让 `/docs` 顶部高频场景入口和 Playground 学习面板共享同一套场景优先级表达，避免“推荐起点 / 协作进阶”只在 docs 可见。
+- 动作：按 TDD 先为 `src/lib/git-docs.test.ts` 和 `src/lib/git-sim/playground-view-model.test.ts` 增加失败断言，要求命令文档里的 `practiceScenario` 透出 badge 与 emphasis；随后在 `src/lib/git-docs.ts` 中把高频场景优先级元数据复用到 `getPracticeScenarioLink`，并更新 `src/components/playground/panels/LearningPathPanel.tsx`，在当前命令和下一条命令推荐里展示统一标签，并在适合时直接提供“去相关场景”入口。
+- 结果：Playground 现在不只知道下一条推荐命令，还会明确提示这条命令更偏向 `推荐起点`、`协作进阶`、`问题处理` 或 `历史修复`；用户从学习面板就能直接顺着优先级跳去更合适的练习场景。
+- 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件 19 个测试；`pnpm test` 通过 9 个测试文件 59 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20add%20README.md"` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把同一套场景优先级推到 `/docs/[slug]` 详情页和 `/scenarios` 卡片，让 docs、playground、scenarios 三处入口的推荐层级完全一致。

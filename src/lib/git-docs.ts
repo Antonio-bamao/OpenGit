@@ -4,11 +4,14 @@ import { getLearningScenario } from "./git-sim/learning-guide";
 import { getScenarioPreset } from "./git-sim/scenario-presets";
 
 export type CommandDocCategory = "basics" | "branching" | "remote" | "advanced" | "worktree";
+export type FeaturedDocScenarioEmphasis = "primary" | "secondary";
 
 export interface PracticeScenarioLink {
   id: string;
   title: string;
   href: string;
+  badge?: string;
+  emphasis?: FeaturedDocScenarioEmphasis;
 }
 
 export interface PracticeGuidance {
@@ -55,10 +58,19 @@ export interface FeaturedDocScenario {
   title: string;
   summary: string;
   objective: string;
+  badge: string;
+  emphasis: FeaturedDocScenarioEmphasis;
   primaryCommand: string;
   playgroundHref: string;
   primaryDoc?: CommandDoc;
 }
+
+const featuredScenarioMeta = [
+  { id: "solo-project", badge: "推荐起点", emphasis: "primary" as const },
+  { id: "team-collab", badge: "协作进阶", emphasis: "secondary" as const },
+  { id: "conflict-resolution", badge: "问题处理", emphasis: "secondary" as const },
+  { id: "version-rollback", badge: "历史修复", emphasis: "secondary" as const }
+];
 
 const categoryMeta: Array<Omit<CommandDocGroup, "items">> = [
   {
@@ -106,10 +118,18 @@ function getPracticeScenarioLink(scenarioId?: string): PracticeScenarioLink | un
     return undefined;
   }
 
+  const featuredMeta = featuredScenarioMeta.find((entry) => entry.id === scenario.id);
+
   return {
     id: scenario.id,
     title: scenario.title,
-    href: scenario.playgroundHref
+    href: scenario.playgroundHref,
+    ...(featuredMeta
+      ? {
+          badge: featuredMeta.badge,
+          emphasis: featuredMeta.emphasis
+        }
+      : {})
   };
 }
 
@@ -312,16 +332,33 @@ export function getPracticeGuidanceForCommandDoc(docId: string): PracticeGuidanc
 }
 
 export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
-  const featuredScenarioIds = ["solo-project", "team-collab", "conflict-resolution", "version-rollback"];
+  const featuredScenarioMeta = [
+    { id: "solo-project", badge: "推荐起点", emphasis: "primary" as const },
+    { id: "team-collab", badge: "协作进阶", emphasis: "secondary" as const },
+    { id: "conflict-resolution", badge: "问题处理", emphasis: "secondary" as const },
+    { id: "version-rollback", badge: "历史修复", emphasis: "secondary" as const }
+  ];
 
-  return featuredScenarioIds
-    .map((scenarioId) => scenarioCatalog.find((entry) => entry.id === scenarioId))
-    .filter((scenario): scenario is NonNullable<typeof scenario> => Boolean(scenario))
-    .map((scenario) => ({
+  return featuredScenarioMeta
+    .map((entry) => {
+      const scenario = scenarioCatalog.find((item) => item.id === entry.id);
+      return scenario ? { scenario, meta: entry } : undefined;
+    })
+    .filter(
+      (
+        entry
+      ): entry is {
+        scenario: (typeof scenarioCatalog)[number];
+        meta: (typeof featuredScenarioMeta)[number];
+      } => Boolean(entry)
+    )
+    .map(({ scenario, meta }) => ({
       id: scenario.id,
       title: scenario.title,
       summary: scenario.summary,
       objective: scenario.objective,
+      badge: meta.badge,
+      emphasis: meta.emphasis,
       primaryCommand: scenario.primaryCommand,
       playgroundHref: scenario.playgroundHref,
       primaryDoc: getCommandDocForInput(scenario.primaryCommand)

@@ -24,13 +24,20 @@ describe("buildPlaygroundViewModel", () => {
       id: "commit",
       detailHref: "/docs/commit",
       practiceScenario: {
-        id: "solo-project"
+        id: "solo-project",
+        badge: "推荐起点",
+        emphasis: "primary"
       }
     });
     expect(viewModel.nextTask?.command).toBe("git switch -c feature/flow");
     expect(viewModel.nextTaskDoc).toMatchObject({
       id: "switch",
-      detailHref: "/docs/switch"
+      detailHref: "/docs/switch",
+      practiceScenario: {
+        id: "team-collab",
+        badge: "协作进阶",
+        emphasis: "secondary"
+      }
     });
     expect(viewModel.learningScenario.title).toBe("从零开始个人项目");
     expect(viewModel.learningScenario.progressLabel).toBe("2/5");

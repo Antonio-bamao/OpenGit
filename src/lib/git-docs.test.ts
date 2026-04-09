@@ -63,6 +63,25 @@ describe("git-docs", () => {
     });
   });
 
+  it("reuses featured scenario priority metadata inside command practice links", () => {
+    expect(getCommandDocForInput('git commit -m "first commit"')?.practiceScenario).toMatchObject({
+      id: "solo-project",
+      badge: "推荐起点",
+      emphasis: "primary"
+    });
+
+    expect(getCommandDocForInput("git switch -c feature/team-work")?.practiceScenario).toMatchObject({
+      id: "team-collab",
+      badge: "协作进阶",
+      emphasis: "secondary"
+    });
+
+    expect(getCommandDocForInput("git worktree list")?.practiceScenario).toMatchObject({
+      id: "worktree-parallel"
+    });
+    expect(getCommandDocForInput("git worktree list")?.practiceScenario).not.toHaveProperty("badge");
+  });
+
   it("maps real command input back to the relevant docs detail page", () => {
     expect(getDocsHrefForCommandInput("git pull")).toBe("/docs/pull");
     expect(getDocsHrefForCommandInput("git worktree add ../hotfix main")).toBe("/docs/worktree");
@@ -136,6 +155,8 @@ describe("git-docs", () => {
     ]);
     expect(entries[0]).toMatchObject({
       title: "从零开始个人项目",
+      badge: "推荐起点",
+      emphasis: "primary",
       playgroundHref: "/playground?scenario=solo-project&command=git%20init",
       primaryDoc: {
         id: "init",
@@ -144,6 +165,8 @@ describe("git-docs", () => {
     });
     expect(entries[2]).toMatchObject({
       title: "处理冲突",
+      badge: "问题处理",
+      emphasis: "secondary",
       primaryCommand: "git pull",
       primaryDoc: {
         id: "pull",

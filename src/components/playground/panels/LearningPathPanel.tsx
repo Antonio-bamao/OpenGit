@@ -26,6 +26,16 @@ export function LearningPathPanel({
     activeTaskDoc?.practiceScenario && activeTaskDoc.practiceScenario.id !== scenario.id
       ? activeTaskDoc.practiceScenario
       : undefined;
+  const activePracticeBadgeClass =
+    activeTaskDoc?.practiceScenario?.emphasis === "primary"
+      ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+      : "border border-slate-200 bg-slate-50 text-slate-500";
+  const nextPracticeScenario = nextTaskDoc?.practiceScenario;
+  const nextPracticeIsCurrentScenario = nextPracticeScenario?.id === scenario.id;
+  const nextPracticeBadgeClass =
+    nextPracticeScenario?.emphasis === "primary"
+      ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+      : "border border-slate-200 bg-slate-50 text-slate-500";
 
   return (
     <div className="mb-5">
@@ -80,11 +90,28 @@ export function LearningPathPanel({
               推荐练习：{activeTaskDoc.practiceScenario?.title ?? "当前 Playground"}
             </span>
           </div>
+          {activeTaskDoc.practiceScenario?.badge ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className={`rounded-full px-2.5 py-1 ${activePracticeBadgeClass}`}>
+                {activeTaskDoc.practiceScenario.badge}
+              </span>
+            </div>
+          ) : null}
           {nextTask && nextTaskDoc ? (
             <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
               <p className="font-semibold text-slate-950">做完这一步后，建议先看下一条命令</p>
               <p className="mt-2 font-mono text-sm text-slate-900">{nextTaskDoc.syntax}</p>
               <p className="mt-2 leading-5">{nextTask.goal}</p>
+              {nextPracticeScenario ? (
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span className={`rounded-full px-2.5 py-1 ${nextPracticeBadgeClass}`}>
+                    {nextPracticeScenario.badge ?? "延伸练习"}
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1">
+                    {nextPracticeIsCurrentScenario ? "当前场景" : nextPracticeScenario.title}
+                  </span>
+                </div>
+              ) : null}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Link
                   href={nextTaskDoc.detailHref}
@@ -92,6 +119,14 @@ export function LearningPathPanel({
                 >
                   看下一条命令解释
                 </Link>
+                {!nextPracticeIsCurrentScenario && nextPracticeScenario ? (
+                  <Link
+                    href={nextPracticeScenario.href}
+                    className="inline-flex min-h-8 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                  >
+                    去相关场景
+                  </Link>
+                ) : null}
                 <button
                   type="button"
                   onClick={() => onFillCommand(nextTask.command)}
