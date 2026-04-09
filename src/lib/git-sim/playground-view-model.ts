@@ -1,6 +1,11 @@
 import { getLearningScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
 import type { GitCommit, GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
-import { getCommandDocForInput, type CommandDoc } from "../git-docs";
+import {
+  getCommandDocForInput,
+  getNextFeaturedScenarioForScenarioId,
+  type CommandDoc,
+  type FeaturedDocScenario
+} from "../git-docs";
 
 export const flowZones = [
   { key: "working", label: "工作区", description: "尚未暂存的文件" },
@@ -63,6 +68,8 @@ export interface PlaygroundViewModel {
   activeTaskDoc: CommandDoc | undefined;
   nextTask: LearningChecklistItem | undefined;
   nextTaskDoc: CommandDoc | undefined;
+  upcomingNextScenario: FeaturedDocScenario | undefined;
+  completionNextScenario: FeaturedDocScenario | undefined;
   headCommit: string;
   remoteHead: string;
   syncStatus: BranchSyncStatus;
@@ -89,6 +96,13 @@ export function buildPlaygroundViewModel(
     : -1;
   const nextTask = activeTaskIndex >= 0 ? learningChecklist[activeTaskIndex + 1] : undefined;
   const nextTaskDoc = nextTask ? getCommandDocForInput(nextTask.command) : undefined;
+  const upcomingNextScenario =
+    !learningScenario.isComplete && activeTaskIndex >= 0 && activeTaskIndex === learningChecklist.length - 1
+      ? getNextFeaturedScenarioForScenarioId(learningScenario.id)
+      : undefined;
+  const completionNextScenario = learningScenario.isComplete
+    ? getNextFeaturedScenarioForScenarioId(learningScenario.id)
+    : undefined;
   const syncStatus = buildBranchSyncStatus(gitState);
   const remoteRefs = buildRemoteRefs(gitState);
 
@@ -131,6 +145,8 @@ export function buildPlaygroundViewModel(
     activeTaskDoc,
     nextTask,
     nextTaskDoc,
+    upcomingNextScenario,
+    completionNextScenario,
     headCommit: gitState.head ?? "no commits",
     remoteHead: gitState.remoteCommits[0]?.hash ?? "not pushed",
     syncStatus,

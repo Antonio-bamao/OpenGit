@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   commandDocs,
   getFeaturedDocScenarios,
+  getNextFeaturedScenarioForCommandDoc,
+  getNextFeaturedScenarioForScenarioId,
   getFeaturedScenarioMeta,
   getAllCommandDocSlugs,
   getCommandDocBySlug,
@@ -188,6 +190,32 @@ describe("git-docs", () => {
       emphasis: "secondary"
     });
     expect(getFeaturedScenarioMeta("release-management")).toBeUndefined();
+  });
+
+  it("suggests the next featured scenario so docs detail pages can build a newcomer path", () => {
+    expect(getNextFeaturedScenarioForCommandDoc("init")).toMatchObject({
+      id: "team-collab",
+      emphasis: "secondary",
+      playgroundHref: "/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"
+    });
+    expect(getNextFeaturedScenarioForCommandDoc("pull")).toMatchObject({
+      id: "version-rollback",
+      emphasis: "secondary"
+    });
+    expect(getNextFeaturedScenarioForCommandDoc("log")).toBeUndefined();
+    expect(getNextFeaturedScenarioForCommandDoc("tag")).toBeUndefined();
+  });
+
+  it("suggests the next featured scenario by scenario id for cross-entry onboarding", () => {
+    expect(getNextFeaturedScenarioForScenarioId("solo-project")).toMatchObject({
+      id: "team-collab",
+      emphasis: "secondary"
+    });
+    expect(getNextFeaturedScenarioForScenarioId("team-collab")).toMatchObject({
+      id: "conflict-resolution"
+    });
+    expect(getNextFeaturedScenarioForScenarioId("version-rollback")).toBeUndefined();
+    expect(getNextFeaturedScenarioForScenarioId("release-management")).toBeUndefined();
   });
 
   it("returns the full grouped catalog when the search query is empty", () => {

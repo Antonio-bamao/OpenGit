@@ -5,6 +5,7 @@ import {
   getAllCommandDocSlugs,
   getCommandDocBySlug,
   getFeaturedScenarioMeta,
+  getNextFeaturedScenarioForCommandDoc,
   getGroupedCommandDocs,
   getPracticeGuidanceForCommandDoc
 } from "@/lib/git-docs";
@@ -28,6 +29,7 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
 
   const practiceGuidance = getPracticeGuidanceForCommandDoc(doc.id);
   const practicePriority = practiceGuidance ? getFeaturedScenarioMeta(practiceGuidance.scenario.id) : undefined;
+  const nextFeaturedScenario = getNextFeaturedScenarioForCommandDoc(doc.id);
   const siblingCommands =
     getGroupedCommandDocs()
       .find((group) => group.id === doc.category)
@@ -109,6 +111,45 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
                   >
                     先看场景总览
                   </Link>
+                </div>
+              </div>
+            ) : null}
+
+            {nextFeaturedScenario ? (
+              <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Next Path</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold text-slate-950">练完这条后，建议继续这个场景</h2>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      nextFeaturedScenario.emphasis === "primary"
+                        ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border border-slate-200 bg-slate-50 text-slate-500"
+                    }`}
+                  >
+                    {nextFeaturedScenario.badge}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm font-semibold text-emerald-700">{nextFeaturedScenario.title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{nextFeaturedScenario.summary}</p>
+                <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700">
+                  {nextFeaturedScenario.primaryCommand}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href={nextFeaturedScenario.playgroundHref}
+                    className="inline-flex min-h-11 items-center justify-center rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                  >
+                    去下一个场景
+                  </Link>
+                  {nextFeaturedScenario.primaryDoc ? (
+                    <Link
+                      href={nextFeaturedScenario.primaryDoc.detailHref}
+                      className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                    >
+                      先看下一条命令
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             ) : null}

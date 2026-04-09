@@ -41,12 +41,26 @@ describe("buildPlaygroundViewModel", () => {
     });
     expect(viewModel.learningScenario.title).toBe("从零开始个人项目");
     expect(viewModel.learningScenario.progressLabel).toBe("2/5");
+    expect(viewModel.upcomingNextScenario).toBeUndefined();
     expect(viewModel.headCommit).toBe("no commits");
     expect(viewModel.remoteHead).toBe("not pushed");
     expect(viewModel.syncStatus.summary).toBe("no remote");
 
     state = executeGitCommand(state, 'git commit -m "first commit"').state;
     state = executeGitCommand(state, "git switch -c feature/flow").state;
+    viewModel = buildPlaygroundViewModel(state);
+
+    expect(viewModel.activeTask?.command).toBe("git push");
+    expect(viewModel.nextTask).toBeUndefined();
+    expect(viewModel.upcomingNextScenario).toMatchObject({
+      id: "team-collab",
+      emphasis: "secondary",
+      primaryDoc: {
+        id: "clone",
+        detailHref: "/docs/clone"
+      }
+    });
+
     const pushResult = executeGitCommand(state, "git push");
     viewModel = buildPlaygroundViewModel(pushResult.state, pushResult.effect);
 
@@ -57,6 +71,15 @@ describe("buildPlaygroundViewModel", () => {
     expect(viewModel.learningScenario.isComplete).toBe(true);
     expect(viewModel.nextTask).toBeUndefined();
     expect(viewModel.nextTaskDoc).toBeUndefined();
+    expect(viewModel.upcomingNextScenario).toBeUndefined();
+    expect(viewModel.completionNextScenario).toMatchObject({
+      id: "team-collab",
+      emphasis: "secondary",
+      primaryDoc: {
+        id: "clone",
+        detailHref: "/docs/clone"
+      }
+    });
     expect(viewModel.headCommit).toBe("c000001");
     expect(viewModel.remoteHead).toBe("c000001");
     expect(viewModel.syncStatus).toMatchObject({

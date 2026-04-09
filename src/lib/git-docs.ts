@@ -335,6 +335,29 @@ export function getFeaturedScenarioMeta(scenarioId: string) {
   return featuredScenarioMeta.find((entry) => entry.id === scenarioId);
 }
 
+export function getNextFeaturedScenarioForScenarioId(scenarioId: string): FeaturedDocScenario | undefined {
+  const currentFeaturedIndex = featuredScenarioMeta.findIndex((entry) => entry.id === scenarioId);
+  if (currentFeaturedIndex < 0) {
+    return undefined;
+  }
+
+  const nextFeaturedMeta = featuredScenarioMeta[currentFeaturedIndex + 1];
+  if (!nextFeaturedMeta) {
+    return undefined;
+  }
+
+  return getFeaturedDocScenarios().find((entry) => entry.id === nextFeaturedMeta.id);
+}
+
+export function getNextFeaturedScenarioForCommandDoc(docId: string): FeaturedDocScenario | undefined {
+  const practiceGuidance = getPracticeGuidanceForCommandDoc(docId);
+  if (!practiceGuidance) {
+    return undefined;
+  }
+
+  return getNextFeaturedScenarioForScenarioId(practiceGuidance.scenario.id);
+}
+
 export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
   const featuredScenarioMeta = [
     { id: "solo-project", badge: "推荐起点", emphasis: "primary" as const },

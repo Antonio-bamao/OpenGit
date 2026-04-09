@@ -1,5 +1,13 @@
 # 工作日志
 
+## 2026-04-10 01:24 - 提前在 Playground 最后一步预告下一张场景卡
+
+- 目标：让用户在场景的最后一个未完成步骤里，就能提前看到下一张推荐场景卡，而不是等整张场景卡完成后才得到下一站引导。
+- 动作：按 TDD 先在 `src/lib/git-sim/playground-view-model.test.ts` 为“最后一步但未完成”状态补失败断言；随后在 `src/lib/git-sim/playground-view-model.ts` 中新增 `upcomingNextScenario`，只在当前活跃任务已经是 checklist 最后一步且场景尚未完成时派生推荐场景；更新 `src/components/playground/panels/LearningPathPanel.tsx` 与 `src/components/playground/PlaygroundShell.tsx`，把这张预告卡接进现有学习面板。
+- 结果：Playground 现在同时具备两层“下一站”引导。用户接近完成时会先看到预告版 `Next Path`，完成当前场景后再进入完成态推荐，教学节奏更连贯。
+- 验证：`pnpm test src/lib/git-sim/playground-view-model.test.ts` 通过 1 个测试文件 7 个测试；`pnpm test` 通过 9 个测试文件 62 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20switch%20-c%20feature%2Fflow"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20push"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把这条推荐链路扩到 `/scenarios` 页的练习顺序提示，或在 Playground 里进一步区分“即将完成”和“已完成”两种引导视觉层级。
+
 > 每完成一个明确步骤就追加一条记录，不写流水账。
 
 ## 2026-04-08 16:50 - 初始化仓库与项目上下文
@@ -241,3 +249,19 @@
 - 结果：现在用户在 `/docs/init` 能看到对应练习流属于 `推荐起点`，在 `/scenarios` 也能一眼识别哪张卡更适合先练，三个入口的推荐逻辑开始真正统一。
 - 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件 13 个测试；`pnpm test` 通过 9 个测试文件 60 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/scenarios` 返回 200；`curl -I http://127.0.0.1:3900/docs/init` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续把“推荐起点”细化成更明确的新手路径，例如在 docs 详情页补“练完这条命令建议去哪一张场景卡”，或在 scenarios 页做更清晰的初学者排序提示。
+
+## 2026-04-10 01:01 - 给 docs 详情页补“练完后下一站”
+
+- 目标：让 `/docs/[slug]` 不只给当前命令的推荐练习场景，还能继续告诉用户下一张更适合接着练的高频场景卡。
+- 动作：按 TDD 先在 `src/lib/git-docs.test.ts` 为 `getNextFeaturedScenarioForCommandDoc` 补失败断言；随后在 `src/lib/git-docs.ts` 新增基于 featured 场景顺序的下一站 helper，并在 `src/app/docs/[slug]/page.tsx` 中新增 `Next Path` 卡片，展示下一张推荐场景、对应标签、主命令，以及“去下一个场景 / 先看下一条命令”入口。
+- 结果：命令详情页现在具备了最小的新手路径能力，例如看完 `git init` 后，会知道下一站建议去团队协作场景，而不是停在单条命令解释上。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件 14 个测试；`pnpm test` 通过 9 个测试文件 61 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs/init` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：把这条“下一站”链路继续接到 Playground 完成态，练完当前步骤后直接提示下一张推荐场景卡。
+
+## 2026-04-10 01:10 - 把“下一站”接到 Playground 完成态
+
+- 目标：让用户在 Playground 练完整张场景卡后，不用回到 docs，也能直接看到下一张推荐高频场景卡。
+- 动作：按 TDD 先在 `src/lib/git-docs.test.ts` 和 `src/lib/git-sim/playground-view-model.test.ts` 补失败断言；随后在 `src/lib/git-docs.ts` 新增 `getNextFeaturedScenarioForScenarioId`，让场景级别也能复用同一套推荐顺序；在 `src/lib/git-sim/playground-view-model.ts` 中透出 `completionNextScenario`，并更新 `src/components/playground/panels/LearningPathPanel.tsx` 与 `src/components/playground/PlaygroundShell.tsx`，让完成态显示 `Next Path` 卡片。
+- 结果：现在不只 docs 详情页知道“练完这条去哪”，Playground 在场景完成后也会直接给出下一张推荐场景卡和下一条命令入口，教学闭环又顺了一层。
+- 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件 22 个测试；`pnpm test` 通过 9 个测试文件 62 个测试；`pnpm lint` 无 warning/error；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20push"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"` 返回 200；`python C:\Users\m1591\.codex\skills\project-context-os\scripts\validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：把“下一站推荐”继续前置到接近完成的时机，或者在 `/scenarios` 里明确标出建议练习顺序。
