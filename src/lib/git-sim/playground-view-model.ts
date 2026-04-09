@@ -1,4 +1,4 @@
-import { getActiveLearningScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
+import { getLearningScenario, type LearningChecklistItem, type LearningScenario } from "./learning-guide";
 import type { GitCommit, GitFileStatus, GitFlowEffect, GitFlowZone, GitState } from "./types";
 
 export const flowZones = [
@@ -67,13 +67,14 @@ export interface PlaygroundViewModel {
 
 export function buildPlaygroundViewModel(
   gitState: GitState,
-  latestEffect?: GitFlowEffect
+  latestEffect?: GitFlowEffect,
+  selectedScenarioId?: string
 ): PlaygroundViewModel {
   const workingFiles = gitState.files.filter(
     (file) => file.status === "untracked" || file.status === "modified"
   );
   const stagedFiles = gitState.files.filter((file) => file.status === "staged");
-  const learningScenario = getActiveLearningScenario(gitState);
+  const learningScenario = getLearningScenario(gitState, selectedScenarioId);
   const learningChecklist = learningScenario.checklist;
   const syncStatus = buildBranchSyncStatus(gitState);
   const remoteRefs = buildRemoteRefs(gitState);

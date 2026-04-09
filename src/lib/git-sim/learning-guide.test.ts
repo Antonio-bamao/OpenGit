@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGitState, executeGitCommand } from "./git-simulator";
-import { getActiveLearningScenario, getLearningChecklist, getSoloProjectScenario, getTeamCollaborationScenario } from "./learning-guide";
+import {
+  getActiveLearningScenario,
+  getLearningChecklist,
+  getLearningScenario,
+  getSoloProjectScenario,
+  getTeamCollaborationScenario
+} from "./learning-guide";
 
 describe("getLearningChecklist", () => {
   it("tracks the guided git workflow from init to push", () => {
@@ -92,5 +98,18 @@ describe("getLearningChecklist", () => {
 
     state = executeGitCommand(state, "git clone https://github.com/opengit/example.git").state;
     expect(getActiveLearningScenario(state).id).toBe("team-collab");
+  });
+
+  it("selects the release management scenario when requested explicitly", () => {
+    let state = createInitialGitState();
+    state = executeGitCommand(state, "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "release base"').state;
+
+    const scenario = getLearningScenario(state, "release-management");
+
+    expect(scenario.id).toBe("release-management");
+    expect(scenario.title).toBe("发布管理");
+    expect(scenario.activeTask?.command).toBe("git branch release");
   });
 });

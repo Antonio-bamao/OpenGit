@@ -23,11 +23,13 @@ export interface GitState {
   branch: string;
   branches: string[];
   branchHeads: Record<string, string | null>;
+  tags: Record<string, string | null>;
   head: string | null;
   files: GitFile[];
   commits: GitCommit[];
   remoteCommits: GitCommit[];
   remoteBranchHeads: Record<string, string | null>;
+  remoteTags: Record<string, string | null>;
 }
 
 export interface GitCommand {
@@ -54,7 +56,10 @@ export type GitFlowEffectType =
   | "push"
   | "pull"
   | "fetch"
-  | "switch";
+  | "switch"
+  | "reset"
+  | "revert"
+  | "tag";
 
 export interface GitFlowEffect {
   type: GitFlowEffectType;

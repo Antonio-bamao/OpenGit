@@ -142,3 +142,17 @@
 - 结果：现在从 /scenarios 进入 Playground 时，solo-project 会从空白目录开始，team-collab 会从已 clone 的团队仓库开始，并直接把下一步命令填成 git switch -c feature/team-work。
 - 验证：pnpm test src/lib/git-sim/scenario-catalog.test.ts src/lib/git-sim/scenario-presets.test.ts 通过 2 个测试文件 4 个测试；pnpm test 通过 8 个测试文件 29 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功；curl -I http://127.0.0.1:3900/playground 返回 200；curl -I http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work 返回 200。
 - 下一步：继续扩展 planned 场景的底层命令能力，优先做 conflict/revert/tag/worktree 之一，让 /scenarios 里更多卡片从 planned 变成 ready。
+
+## 2026-04-09 20:57｜把版本回退场景从 planned 提升为 ready
+- 目标：把版本回退场景从 planned 提升为 ready
+- 动作：按 TDD 为 git reset --soft HEAD~1、git revert HEAD、rollback 场景 catalog/preset/view model 写红灯测试；在 Git simulator 中实现提交级 reset 和 revert；为 version-rollback 场景添加预设仓库状态与显式学习路线；把 /scenarios 中的 version-rollback 卡片切换为 ready，并让 Playground 正确加载该场景。
+- 结果：现在用户可以从 /scenarios 直接进入版本回退场景，在一个预置了 bad commit 的仓库里练习 git revert HEAD，并对比 git reset --soft HEAD~1 的效果；学习面板也会切换到版本回退路线。
+- 验证：pnpm test src/lib/git-sim/git-simulator.test.ts src/lib/git-sim/scenario-catalog.test.ts src/lib/git-sim/scenario-presets.test.ts src/lib/git-sim/playground-view-model.test.ts 通过 4 个测试文件 23 个测试；pnpm test 通过 8 个测试文件 33 个测试；pnpm lint 无 ESLint warning/error；pnpm build 成功；curl -I http://127.0.0.1:3900/scenarios 返回 200；curl -I http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20revert%20HEAD 返回 200。
+- 下一步：继续扩展下一张 planned 场景，优先考虑 release-management 的 git tag，或 worktree-parallel 的 git worktree add/list/remove。
+
+## 2026-04-09 21:12｜把 release-management 场景从 planned 推进到 ready
+- 目标：把 release-management 场景从 planned 推进到 ready
+- 动作：按 TDD 为 git tag 与 git push --tags 增加测试；在 git-simulator 中加入本地标签与远端标签状态；补齐 release-management 的场景目录、预设与学习路线；在 RepositoryInsightPanel 中展示本地标签和远端标签。
+- 结果：release-management 现已成为 ready 场景，用户可从 /scenarios 直接进入发布管理练习；Playground 能模拟创建标签、推送标签，并在仓库洞察面板中看到 local tags 与 origin tags。
+- 验证：pnpm test 通过 8 个测试文件、37 个测试；pnpm lint 无警告；pnpm build 成功；curl -I http://127.0.0.1:3900/scenarios 返回 200；curl -I http://127.0.0.1:3900/playground?scenario=release-management&command=git%20branch%20release 返回 200。
+- 下一步：继续推进 worktree-parallel 或 conflict-resolution，让下一张 planned 卡升级为 ready。

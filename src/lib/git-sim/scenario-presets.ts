@@ -60,9 +60,58 @@ function createTeamCollaborationPreset(): ScenarioPreset {
   };
 }
 
+function createVersionRollbackPreset(): ScenarioPreset {
+  let gitState = executeGitCommand(createInitialGitState(), "git init").state;
+  gitState = executeGitCommand(gitState, "git add README.md").state;
+  gitState = executeGitCommand(gitState, 'git commit -m "base"').state;
+  gitState = executeGitCommand(gitState, "git add README.md").state;
+  gitState = executeGitCommand(gitState, 'git commit -m "broken change"').state;
+
+  return {
+    gitState,
+    history: [
+      createScenarioEntry(
+        gitState,
+        "已载入回退场景，最新一条提交是错误改动。先用 git revert HEAD 生成一条修复提交，再对比 git reset 的效果。",
+        "版本回退场景已就绪",
+        "这里提前准备好了两条提交历史，让你专注观察 reset 和 revert 对 HEAD、历史和工作区的不同影响。"
+      )
+    ],
+    initialCommand: "git revert HEAD"
+  };
+}
+
+function createReleaseManagementPreset(): ScenarioPreset {
+  let gitState = executeGitCommand(createInitialGitState(), "git init").state;
+  gitState = executeGitCommand(gitState, "git add README.md").state;
+  gitState = executeGitCommand(gitState, 'git commit -m "release base"').state;
+  gitState = executeGitCommand(gitState, "git push").state;
+
+  return {
+    gitState,
+    history: [
+      createScenarioEntry(
+        gitState,
+        "已载入发布场景，main 上已经有一个稳定提交。先切出 release 分支，再打标签并推送 tags。",
+        "发布管理场景已就绪",
+        "这里重点观察 release 分支、标签和远端标签如何一起定义一个明确的发布节点。"
+      )
+    ],
+    initialCommand: "git branch release"
+  };
+}
+
 export function getScenarioPreset(scenarioId?: string): ScenarioPreset {
   if (scenarioId === "team-collab") {
     return createTeamCollaborationPreset();
+  }
+
+  if (scenarioId === "version-rollback") {
+    return createVersionRollbackPreset();
+  }
+
+  if (scenarioId === "release-management") {
+    return createReleaseManagementPreset();
   }
 
   return createSoloProjectPreset();

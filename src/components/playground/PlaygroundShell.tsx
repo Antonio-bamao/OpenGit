@@ -14,6 +14,7 @@ import { RepositoryInsightPanel } from "./panels/RepositoryInsightPanel";
 interface PlaygroundShellProps {
   initialCommand?: string;
   initialHistory?: CommandResult[];
+  initialScenarioId?: string;
   initialState?: GitState;
 }
 
@@ -35,6 +36,7 @@ function createWelcomeEntry(initialCommand = ""): CommandResult {
 export function PlaygroundShell({
   initialCommand = "",
   initialHistory,
+  initialScenarioId,
   initialState
 }: PlaygroundShellProps) {
   const seededState = initialState ?? createInitialGitState();
@@ -47,8 +49,8 @@ export function PlaygroundShell({
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
   const viewModel = useMemo(
-    () => buildPlaygroundViewModel(gitState, history.at(-1)?.effect),
-    [gitState, history]
+    () => buildPlaygroundViewModel(gitState, history.at(-1)?.effect, initialScenarioId),
+    [gitState, history, initialScenarioId]
   );
   const graphViewModel = useMemo(
     () => buildGitGraphViewModel(gitState, history.at(-1)?.effect),

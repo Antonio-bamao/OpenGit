@@ -108,4 +108,30 @@ describe("buildPlaygroundViewModel", () => {
       { name: "origin/main", branch: "main", target: "c000001", isCurrentBranch: false }
     ]);
   });
+
+  it("uses an explicitly selected rollback scenario", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "base"').state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "broken change"').state;
+
+    const viewModel = buildPlaygroundViewModel(state, undefined, "version-rollback");
+
+    expect(viewModel.learningScenario.id).toBe("version-rollback");
+    expect(viewModel.learningScenario.title).toBe("版本回退与修复");
+    expect(viewModel.activeTask?.command).toBe("git revert HEAD");
+  });
+
+  it("uses an explicitly selected release scenario", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "release base"').state;
+
+    const viewModel = buildPlaygroundViewModel(state, undefined, "release-management");
+
+    expect(viewModel.learningScenario.id).toBe("release-management");
+    expect(viewModel.learningScenario.title).toBe("发布管理");
+    expect(viewModel.activeTask?.command).toBe("git branch release");
+  });
 });

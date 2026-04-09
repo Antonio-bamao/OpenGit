@@ -28,6 +28,7 @@ export default function PlaygroundPage({ searchParams }: PlaygroundPageProps) {
         <PlaygroundShell
           initialCommand={searchParams?.command ?? preset.initialCommand}
           initialHistory={preset.history}
+          initialScenarioId={searchParams?.scenario}
           initialState={preset.gitState}
         />
       </div>

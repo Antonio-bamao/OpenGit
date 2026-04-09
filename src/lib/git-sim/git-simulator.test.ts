@@ -234,4 +234,60 @@ describe("executeGitCommand", () => {
     expect(result.state.branchHeads.main).toBe("c000002");
     expect(result.state.commits[0]?.message).toBe("teammate update");
   });
+
+  it("moves HEAD back one commit with commit-level reset while preserving changes", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "base"').state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "broken change"').state;
+
+    const result = executeGitCommand(state, "git reset --soft HEAD~1");
+
+    expect(result.output).toContain("HEAD is now at c000001");
+    expect(result.effect?.type).toBe("reset");
+    expect(result.state.head).toBe("c000001");
+    expect(result.state.branchHeads.main).toBe("c000001");
+    expect(result.state.files.find((file) => file.path === "README.md")?.status).toBe("staged");
+  });
+
+  it("creates a revert commit that keeps history linear", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "base"').state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "broken change"').state;
+
+    const result = executeGitCommand(state, "git revert HEAD");
+
+    expect(result.output).toContain('Revert "broken change"');
+    expect(result.effect?.type).toBe("revert");
+    expect(result.state.head).toBe("c000003");
+    expect(result.state.branchHeads.main).toBe("c000003");
+    expect(result.state.commits[0]).toMatchObject({
+      hash: "c000003",
+      message: 'Revert "broken change"',
+      parentHash: "c000002"
+    });
+  });
+
+  it("creates tags and pushes them to the simulated remote", () => {
+    let state = executeGitCommand(createInitialGitState(), "git init").state;
+    state = executeGitCommand(state, "git add README.md").state;
+    state = executeGitCommand(state, 'git commit -m "release base"').state;
+    state = executeGitCommand(state, "git push").state;
+
+    let result = executeGitCommand(state, "git tag v1.0.0");
+    state = result.state;
+
+    expect(result.output).toContain("Created tag 'v1.0.0'");
+    expect(result.effect?.type).toBe("tag");
+    expect(result.state.tags["v1.0.0"]).toBe("c000001");
+
+    result = executeGitCommand(state, "git push --tags");
+
+    expect(result.output).toContain("pushed 1 tag to origin");
+    expect(result.effect?.type).toBe("push");
+    expect(result.state.remoteTags["v1.0.0"]).toBe("c000001");
+  });
 });

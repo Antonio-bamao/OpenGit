@@ -16,12 +16,23 @@ describe("scenarioCatalog", () => {
   it("exposes ready scenarios with playground commands", () => {
     const readyScenarios = getReadyScenarios();
 
-    expect(readyScenarios.map((scenario) => scenario.id)).toEqual(["solo-project", "team-collab"]);
+    expect(readyScenarios.map((scenario) => scenario.id)).toEqual([
+      "solo-project",
+      "team-collab",
+      "version-rollback",
+      "release-management"
+    ]);
     expect(readyScenarios[0]?.playgroundHref).toBe(
       "/playground?scenario=solo-project&command=git%20init"
     );
     expect(readyScenarios[1]?.playgroundHref).toBe(
       "/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"
+    );
+    expect(readyScenarios[2]?.playgroundHref).toBe(
+      "/playground?scenario=version-rollback&command=git%20revert%20HEAD"
+    );
+    expect(readyScenarios[3]?.playgroundHref).toBe(
+      "/playground?scenario=release-management&command=git%20branch%20release"
     );
   });
 });

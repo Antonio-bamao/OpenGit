@@ -8,6 +8,9 @@ interface RepositoryInsightPanelProps {
 }
 
 export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsightPanelProps) {
+  const localTags = Object.entries(gitState.tags).sort(([left], [right]) => left.localeCompare(right));
+  const remoteTags = Object.entries(gitState.remoteTags).sort(([left], [right]) => left.localeCompare(right));
+
   return (
     <>
       <p className="text-sm font-semibold text-emerald-700">仓库状态</p>
@@ -87,6 +90,38 @@ export function RepositoryInsightPanel({ gitState, viewModel }: RepositoryInsigh
                 >
                   <span className="font-mono">{ref.name}</span>
                   <span className="ml-1 font-mono opacity-70">{ref.target}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {localTags.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-500">鏈湴鏍囩</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {localTags.map(([tagName, target]) => (
+                <span
+                  key={tagName}
+                  className="rounded-md border border-[var(--git-orange)] bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700"
+                >
+                  <span className="font-mono">{tagName}</span>
+                  <span className="ml-1 font-mono opacity-70">{target ?? "(detached)"}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {remoteTags.length > 0 ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
+            <p className="text-xs font-semibold text-slate-500">杩滅鏍囩</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {remoteTags.map(([tagName, target]) => (
+                <span
+                  key={tagName}
+                  className="rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700"
+                >
+                  <span className="font-mono">origin/tags/{tagName}</span>
+                  <span className="ml-1 font-mono opacity-70">{target ?? "(detached)"}</span>
                 </span>
               ))}
             </div>

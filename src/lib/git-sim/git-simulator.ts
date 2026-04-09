@@ -13,11 +13,13 @@ export function createInitialGitState(): GitState {
     branch: "main",
     branches: ["main"],
     branchHeads: { main: null },
+    tags: {},
     head: null,
     files: initialFiles.map((file) => ({ ...file })),
     commits: [],
     remoteCommits: [],
-    remoteBranchHeads: {}
+    remoteBranchHeads: {},
+    remoteTags: {}
   };
 }
 
@@ -53,9 +55,13 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
     case "restore":
       return restoreFiles(state, command.args);
     case "reset":
-      return resetStaging(state);
+      return handleResetCommand(state, command.args);
+    case "revert":
+      return revertCommit(state, command.args);
     case "branch":
       return handleBranchCommand(state, command.args);
+    case "tag":
+      return handleTagCommand(state, command.args);
     case "switch":
       return switchBranch(state, command.args);
     case "checkout":
@@ -63,7 +69,7 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
     case "remote":
       return showRemote(state, command.args);
     case "push":
-      return pushCommits(state);
+      return pushCommits(state, command.args);
     case "fetch":
       return fetchCommits(state);
     case "pull":
@@ -74,7 +80,7 @@ export function executeGitCommand(state: GitState, input: string): CommandResult
         output: `git: '${command.name}' is not a git command. See 'git --help'.`,
         hint: {
           title: "为什么报错",
-          body: "OpenGit MVP 目前覆盖 clone、init、status、add、commit、log、diff、restore、reset、branch、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
+          body: "OpenGit MVP 目前覆盖 clone、init、status、add、commit、log、diff、restore、reset、revert、branch、tag、switch、checkout、remote、push、fetch 和 pull。后续会逐步扩展更多 Git 命令。"
         }
       };
   }
@@ -111,11 +117,13 @@ function cloneRepository(state: GitState, args: string[]): CommandResult {
       branch: "main",
       branches: ["main"],
       branchHeads: { main: commit.hash },
+      tags: {},
       head: commit.hash,
       files: initialFiles.map((file) => ({ ...file, status: "tracked" as const })),
       commits: [commit],
       remoteCommits: [{ ...commit, files: [...commit.files] }],
-      remoteBranchHeads: { main: commit.hash }
+      remoteBranchHeads: { main: commit.hash },
+      remoteTags: {}
     },
     output: `Cloning into '${repositoryName}'...\nremote: Enumerating objects: 3, done.\nReceiving objects: 100% (3/3), done.`,
     effect: {
@@ -305,12 +313,130 @@ function restoreFiles(state: GitState, args: string[]): CommandResult {
   return unstageFiles(state, target);
 }
 
-function resetStaging(state: GitState): CommandResult {
+function handleResetCommand(state: GitState, args: string[]): CommandResult {
   if (!state.initialized) {
     return notARepository(state);
   }
 
+  const resetMode = args.includes("--hard")
+    ? "hard"
+    : args.includes("--soft")
+      ? "soft"
+      : args.includes("--mixed")
+        ? "mixed"
+        : null;
+  const targetArg = args.find((arg) => !arg.startsWith("--"));
+
+  if (resetMode || targetArg) {
+    return resetCommitPointer(state, targetArg ?? "HEAD", resetMode ?? "mixed");
+  }
+
+  return resetStaging(state);
+}
+
+function resetStaging(state: GitState): CommandResult {
   return unstageFiles(state, ".");
+}
+
+function resetCommitPointer(
+  state: GitState,
+  target: string,
+  mode: "soft" | "mixed" | "hard"
+): CommandResult {
+  const targetCommit = resolveCommitTarget(state, target);
+
+  if (!targetCommit) {
+    return {
+      state,
+      output: `fatal: ambiguous argument '${target}': unknown revision or path not in the working tree.`
+    };
+  }
+
+  const currentCommit = state.commits.find((commit) => commit.hash === state.head);
+  const affectedPaths = new Set(currentCommit?.files ?? []);
+  const files = state.files.map((file) => {
+    if (!affectedPaths.has(file.path)) {
+      return file;
+    }
+
+    if (mode === "soft") {
+      return { ...file, status: "staged" as const };
+    }
+
+    if (mode === "mixed") {
+      return { ...file, status: "modified" as const };
+    }
+
+    return {
+      ...file,
+      status: wasCommittedFrom(state, targetCommit.hash, file.path) ? ("tracked" as const) : ("untracked" as const)
+    };
+  });
+
+  return {
+    state: {
+      ...state,
+      head: targetCommit.hash,
+      files,
+      branchHeads: {
+        ...state.branchHeads,
+        [state.branch]: targetCommit.hash
+      }
+    },
+    output: `HEAD is now at ${targetCommit.hash} ${targetCommit.message}`,
+    effect: {
+      type: "reset",
+      from: "local",
+      to: mode === "soft" ? "staging" : "working",
+      filePaths: Array.from(affectedPaths)
+    }
+  };
+}
+
+function revertCommit(state: GitState, args: string[]): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  const targetCommit = resolveCommitTarget(state, args[0] ?? "HEAD");
+  if (!targetCommit) {
+    return {
+      state,
+      output: `fatal: bad revision '${args[0] ?? "HEAD"}'`
+    };
+  }
+
+  const hash = createCommitHash(state.commits.length + 1);
+  const message = `Revert "${targetCommit.message}"`;
+  const commit: GitCommit = {
+    hash,
+    message,
+    files: [...targetCommit.files],
+    branch: state.branch,
+    parentHash: state.head
+  };
+
+  return {
+    state: {
+      ...state,
+      head: hash,
+      files: state.files.map((file) =>
+        targetCommit.files.includes(file.path) ? { ...file, status: "tracked" as const } : file
+      ),
+      branchHeads: {
+        ...state.branchHeads,
+        [state.branch]: hash
+      },
+      commits: [commit, ...state.commits]
+    },
+    output: `[${state.branch} ${hash}] ${message}\n ${targetCommit.files.length} ${pluralize("file", targetCommit.files.length)} changed`,
+    effect: {
+      type: "revert",
+      from: "local",
+      to: "local",
+      filePaths: [...targetCommit.files]
+    }
+  };
 }
 
 function unstageFiles(state: GitState, target: string): CommandResult {
@@ -434,6 +560,74 @@ function deleteBranch(state: GitState, branchName: string | undefined): CommandR
   };
 }
 
+function handleTagCommand(state: GitState, args: string[]): CommandResult {
+  if (!state.initialized) {
+    return notARepository(state);
+  }
+
+  if (args.length === 0) {
+    return {
+      state,
+      output: Object.keys(state.tags).sort().join("\n")
+    };
+  }
+
+  if (args[0] === "-d" || args[0] === "--delete") {
+    const tagName = args[1];
+    if (!tagName || !state.tags[tagName]) {
+      return {
+        state,
+        output: `error: tag '${tagName ?? ""}' not found.`
+      };
+    }
+
+    const { [tagName]: _deleted, ...tags } = state.tags;
+
+    return {
+      state: { ...state, tags },
+      output: `Deleted tag '${tagName}'.`
+    };
+  }
+
+  const tagName = args[0];
+  if (!tagName) {
+    return {
+      state,
+      output: "fatal: tag name required"
+    };
+  }
+
+  if (!state.head) {
+    return {
+      state,
+      output: "fatal: Failed to resolve 'HEAD' as a valid ref."
+    };
+  }
+
+  if (state.tags[tagName]) {
+    return {
+      state,
+      output: `fatal: tag '${tagName}' already exists`
+    };
+  }
+
+  return {
+    state: {
+      ...state,
+      tags: {
+        ...state.tags,
+        [tagName]: state.head
+      }
+    },
+    output: `Created tag '${tagName}' at ${state.head}`,
+    effect: {
+      type: "tag",
+      from: "local",
+      to: "local"
+    }
+  };
+}
+
 function switchBranch(state: GitState, args: string[]): CommandResult {
   if (!state.initialized) {
     return notARepository(state);
@@ -460,9 +654,36 @@ function switchBranch(state: GitState, args: string[]): CommandResult {
   };
 }
 
-function pushCommits(state: GitState): CommandResult {
+function pushCommits(state: GitState, args: string[]): CommandResult {
   if (!state.initialized) {
     return notARepository(state);
+  }
+
+  if (args.includes("--tags")) {
+    const tagsToPush = Object.entries(state.tags).filter(([tagName, hash]) => state.remoteTags[tagName] !== hash);
+
+    if (tagsToPush.length === 0) {
+      return {
+        state,
+        output: "Everything up-to-date"
+      };
+    }
+
+    return {
+      state: {
+        ...state,
+        remoteTags: {
+          ...state.remoteTags,
+          ...Object.fromEntries(tagsToPush)
+        }
+      },
+      output: `pushed ${tagsToPush.length} ${pluralize("tag", tagsToPush.length)} to origin`,
+      effect: {
+        type: "push",
+        from: "local",
+        to: "remote"
+      }
+    };
   }
 
   const localCommits = getReachableCommits(state);
@@ -486,6 +707,9 @@ function pushCommits(state: GitState): CommandResult {
       remoteBranchHeads: {
         ...state.remoteBranchHeads,
         [state.branch]: state.head
+      },
+      remoteTags: {
+        ...state.remoteTags
       }
     },
     output: `pushed ${commitsToPush.length} ${pluralize("commit", commitsToPush.length)} to origin/${state.branch}`,
@@ -637,6 +861,26 @@ function wasCommitted(state: GitState, filePath: string): boolean {
   return state.commits.some((commit) => commit.files.includes(filePath));
 }
 
+function wasCommittedFrom(state: GitState, startHash: string, filePath: string): boolean {
+  const commitsByHash = new Map(state.commits.map((commit) => [commit.hash, commit]));
+  let cursor: string | null = startHash;
+
+  while (cursor) {
+    const commit = commitsByHash.get(cursor);
+    if (!commit) {
+      break;
+    }
+
+    if (commit.files.includes(filePath)) {
+      return true;
+    }
+
+    cursor = commit.parentHash;
+  }
+
+  return false;
+}
+
 function pluralize(word: string, count: number): string {
   return count === 1 ? word : `${word}s`;
 }
@@ -657,6 +901,21 @@ function getReachableCommits(state: GitState): GitCommit[] {
   }
 
   return commits;
+}
+
+function resolveCommitTarget(state: GitState, target: string): GitCommit | undefined {
+  if (target === "HEAD") {
+    return state.commits.find((commit) => commit.hash === state.head);
+  }
+
+  if (target === "HEAD~1" || target === "HEAD^") {
+    const currentCommit = state.commits.find((commit) => commit.hash === state.head);
+    return currentCommit?.parentHash
+      ? state.commits.find((commit) => commit.hash === currentCommit.parentHash)
+      : undefined;
+  }
+
+  return state.commits.find((commit) => commit.hash === target);
 }
 
 function dedupeCommits(commits: GitCommit[]): GitCommit[] {

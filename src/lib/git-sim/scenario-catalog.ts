@@ -55,22 +55,22 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
     title: "版本回退与修复",
     summary: "提交了错误改动后，观察 reset / revert 如何改变历史或生成修复提交。",
     objective: "区分本地回退和可协作的修复提交。",
-    status: "planned",
-    statusLabel: "后续",
-    primaryCommand: "git reset",
-    playgroundHref: createPlaygroundHref("version-rollback", "git reset"),
-    steps: ["git log", "git reset", "git revert", "git status"]
+    status: "ready",
+    statusLabel: "可练习",
+    primaryCommand: "git revert HEAD",
+    playgroundHref: createPlaygroundHref("version-rollback", "git revert HEAD"),
+    steps: ["git log", "git revert HEAD", "git status", "git reset --soft HEAD~1"]
   },
   {
     id: "release-management",
     title: "发布管理",
     summary: "围绕 GitHub Flow / Git Flow，连接 tag、release 和稳定分支。",
     objective: "理解发布节点为什么是团队协作中的明确边界。",
-    status: "planned",
-    statusLabel: "后续",
-    primaryCommand: "git tag v1.0.0",
-    playgroundHref: createPlaygroundHref("release-management", "git tag v1.0.0"),
-    steps: ["git branch release", "git tag", "git push --tags", "创建 release"]
+    status: "ready",
+    statusLabel: "可练习",
+    primaryCommand: "git branch release",
+    playgroundHref: createPlaygroundHref("release-management", "git branch release"),
+    steps: ["git branch release", "git switch release", "git tag v1.0.0", "git push --tags"]
   },
   {
     id: "worktree-parallel",
