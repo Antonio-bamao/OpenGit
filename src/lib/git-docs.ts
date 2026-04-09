@@ -1,5 +1,7 @@
 import { scenarioCatalog } from "./git-sim/scenario-catalog";
 import { parseGitCommand } from "./git-sim/command-parser";
+import { getLearningScenario } from "./git-sim/learning-guide";
+import { getScenarioPreset } from "./git-sim/scenario-presets";
 
 export type CommandDocCategory = "basics" | "branching" | "remote" | "advanced" | "worktree";
 
@@ -7,6 +9,24 @@ export interface PracticeScenarioLink {
   id: string;
   title: string;
   href: string;
+}
+
+export interface PracticeGuidance {
+  scenario: {
+    id: string;
+    title: string;
+    summary: string;
+    objective: string;
+    href: string;
+  };
+  step: {
+    title: string;
+    goal: string;
+    command: string;
+    href: string;
+    stepNumber: number;
+    totalSteps: number;
+  };
 }
 
 export interface CommandDoc {
@@ -62,6 +82,10 @@ function createPlaygroundHref(command: string): string {
   return `/playground?command=${encodeURIComponent(command)}`;
 }
 
+function createScenarioPlaygroundHref(scenarioId: string, command: string): string {
+  return `/playground?scenario=${encodeURIComponent(scenarioId)}&command=${encodeURIComponent(command)}`;
+}
+
 function getPracticeScenarioLink(scenarioId?: string): PracticeScenarioLink | undefined {
   if (!scenarioId) {
     return undefined;
@@ -112,7 +136,7 @@ export const commandDocs: CommandDoc[] = [
   createCommandDoc("status", "basics", "git status", "查看工作区、暂存区和当前分支的即时状态。", "git status", [
     "确认哪些文件还没暂存",
     "观察冲突是否已经解决"
-  ], ["当前状态", "仓库状态", "检查改动"], "solo-project"),
+  ], ["当前状态", "仓库状态", "检查改动"], "conflict-resolution"),
   createCommandDoc("add", "basics", "git add <file>|.", "把工作区内容放进暂存区，准备进入下一次提交。", "git add .", [
     "选择下一次提交要包含的文件",
     "冲突解决后标记文件已处理"
@@ -233,6 +257,48 @@ export function getCommandDocForInput(input: string): CommandDoc | undefined {
   }
 
   return commandDocs.find((entry) => entry.id === parsed.name);
+}
+
+export function getPracticeGuidanceForCommandDoc(docId: string): PracticeGuidance | undefined {
+  const doc = getCommandDocBySlug(docId);
+  if (!doc?.practiceScenario) {
+    return undefined;
+  }
+
+  const scenarioMeta = scenarioCatalog.find((entry) => entry.id === doc.practiceScenario?.id);
+  if (!scenarioMeta) {
+    return undefined;
+  }
+
+  const preset = getScenarioPreset(scenarioMeta.id);
+  const learningScenario = getLearningScenario(preset.gitState, scenarioMeta.id);
+  const stepIndex = learningScenario.checklist.findIndex((item) => {
+    const parsed = parseGitCommand(item.command);
+    return parsed.isGit && parsed.name === doc.id;
+  });
+  const step = stepIndex >= 0 ? learningScenario.checklist[stepIndex] : undefined;
+
+  if (!step) {
+    return undefined;
+  }
+
+  return {
+    scenario: {
+      id: scenarioMeta.id,
+      title: scenarioMeta.title,
+      summary: scenarioMeta.summary,
+      objective: scenarioMeta.objective,
+      href: createScenarioPlaygroundHref(scenarioMeta.id, step.command)
+    },
+    step: {
+      title: step.title,
+      goal: step.goal,
+      command: step.command,
+      href: createScenarioPlaygroundHref(scenarioMeta.id, step.command),
+      stepNumber: stepIndex + 1,
+      totalSteps: learningScenario.checklist.length
+    }
+  };
 }
 
 export function getCommandDocBySlug(slug: string): CommandDoc | undefined {

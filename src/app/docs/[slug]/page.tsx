@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { getAllCommandDocSlugs, getCommandDocBySlug, getGroupedCommandDocs } from "@/lib/git-docs";
+import {
+  getAllCommandDocSlugs,
+  getCommandDocBySlug,
+  getGroupedCommandDocs,
+  getPracticeGuidanceForCommandDoc
+} from "@/lib/git-docs";
 
 interface CommandDocDetailPageProps {
   params: {
@@ -20,6 +25,7 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
     notFound();
   }
 
+  const practiceGuidance = getPracticeGuidanceForCommandDoc(doc.id);
   const siblingCommands =
     getGroupedCommandDocs()
       .find((group) => group.id === doc.category)
@@ -54,26 +60,50 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
               ))}
             </ul>
 
+            {practiceGuidance ? (
+              <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                  Recommended Flow
+                </p>
+                <h2 className="mt-3 text-lg font-semibold text-slate-950">
+                  适合从「{practiceGuidance.scenario.title}」进入
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{practiceGuidance.scenario.summary}</p>
+
+                <div className="mt-4 rounded-md border border-emerald-200 bg-white px-3 py-3 text-sm text-slate-700">
+                  <p className="font-semibold text-slate-950">
+                    第 {practiceGuidance.step.stepNumber} / {practiceGuidance.step.totalSteps} 步：
+                    {practiceGuidance.step.title}
+                  </p>
+                  <p className="mt-2 leading-6 text-slate-600">{practiceGuidance.step.goal}</p>
+                  <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700">
+                    {practiceGuidance.step.command}
+                  </p>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href={practiceGuidance.step.href}
+                    className="inline-flex min-h-11 items-center justify-center rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                  >
+                    直接练这一步
+                  </Link>
+                  <Link
+                    href="/scenarios"
+                    className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                  >
+                    先看场景总览
+                  </Link>
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Try It</p>
               <p className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-700">
                 {doc.playgroundCommand}
               </p>
-              {doc.practiceScenario ? (
-                <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-                  <p className="font-semibold">推荐练习场景</p>
-                  <p className="mt-1 text-emerald-800">{doc.practiceScenario.title}</p>
-                </div>
-              ) : null}
               <div className="mt-4 flex flex-wrap gap-3">
-                {doc.practiceScenario ? (
-                  <Link
-                    href={doc.practiceScenario.href}
-                    className="inline-flex min-h-11 items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
-                  >
-                    去练这个场景
-                  </Link>
-                ) : null}
                 <Link
                   href={doc.playgroundHref}
                   className="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"

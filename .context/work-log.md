@@ -205,3 +205,10 @@
 - 结果：Playground 学习面板现在不只有“查看命令解释”和“填入下一步”两个按钮，还会直接展示当前步骤的命令语法和简短说明；如果这个命令更适合在另一个场景里再练一遍，也会给出“去相关场景”的入口，让教学闭环更顺。
 - 验证：`pnpm test src/lib/git-docs.test.ts src/lib/git-sim/playground-view-model.test.ts` 通过 2 个测试文件、16 个测试；`pnpm test` 通过 9 个测试文件、56 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20init"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20revert%20HEAD"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续把 docs 反向接回当前任务，例如在 `/docs/[slug]` 显式标出“适合从哪个场景进入”与“练完后回到哪一步”。 
+
+## 2026-04-09 23:59｜让 `/docs/[slug]` 回跳到具体场景步骤
+- 目标：让单命令详情页不只告诉用户“去哪个场景练”，还明确告诉用户“应该回到哪一步”
+- 动作：按 TDD 为 `git-docs` 增加 `getPracticeGuidanceForCommandDoc` 测试；在 `src/lib/git-docs.ts` 中接入 `scenario-presets` 与 `learning-guide`，从推荐场景反推该命令在 checklist 中对应的标题、目标、命令和步骤序号；更新 `src/app/docs/[slug]/page.tsx`，在命令详情页中新增“适合从哪个场景进入”“第几步练什么”“直接练这一步”的指引，并顺手清理页面里的乱码文案；同时把 `git status` 的推荐练习场景调整到更贴合冲突教学的 `conflict-resolution`。
+- 结果：现在像 `/docs/status` 会明确告诉用户它更适合从“处理冲突”场景进入，并且对应“查看未合并路径”这一步；`/docs/log` 也会回到“版本回退与修复”里的“观察已有历史”。命令文档真正从静态解释变成了场景化练习入口。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、10 个测试；`pnpm test` 通过 9 个测试文件、57 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs/status` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=conflict-resolution&command=git%20status"` 返回 200；`curl -I http://127.0.0.1:3900/docs/log` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20log"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续补强当前任务完成后的引导，例如在 Playground 里提示“这一步做完建议去看哪条命令”或在 `/docs` 总览页加上“高频场景入口”。 

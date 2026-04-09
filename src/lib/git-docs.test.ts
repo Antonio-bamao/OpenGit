@@ -6,6 +6,7 @@ import {
   getCommandDocForInput,
   getDocsHrefForCommandInput,
   getGroupedCommandDocs,
+  getPracticeGuidanceForCommandDoc,
   searchGroupedCommandDocs
 } from "./git-docs";
 
@@ -95,6 +96,32 @@ describe("git-docs", () => {
       category: "remote"
     });
     expect(getCommandDocBySlug("missing")).toBeUndefined();
+  });
+
+  it("builds practice guidance that points back to a concrete scenario step", () => {
+    expect(getPracticeGuidanceForCommandDoc("status")).toMatchObject({
+      scenario: {
+        id: "conflict-resolution",
+        title: "处理冲突"
+      },
+      step: {
+        title: "查看未合并路径",
+        command: "git status"
+      }
+    });
+
+    expect(getPracticeGuidanceForCommandDoc("log")).toMatchObject({
+      scenario: {
+        id: "version-rollback",
+        title: "版本回退与修复"
+      },
+      step: {
+        title: "观察已有历史",
+        command: "git log"
+      }
+    });
+
+    expect(getPracticeGuidanceForCommandDoc("missing")).toBeUndefined();
   });
 
   it("returns the full grouped catalog when the search query is empty", () => {
