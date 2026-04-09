@@ -50,6 +50,16 @@ export interface CommandDocGroup {
   items: CommandDoc[];
 }
 
+export interface FeaturedDocScenario {
+  id: string;
+  title: string;
+  summary: string;
+  objective: string;
+  primaryCommand: string;
+  playgroundHref: string;
+  primaryDoc?: CommandDoc;
+}
+
 const categoryMeta: Array<Omit<CommandDocGroup, "items">> = [
   {
     id: "basics",
@@ -299,6 +309,23 @@ export function getPracticeGuidanceForCommandDoc(docId: string): PracticeGuidanc
       totalSteps: learningScenario.checklist.length
     }
   };
+}
+
+export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
+  const featuredScenarioIds = ["solo-project", "team-collab", "conflict-resolution", "version-rollback"];
+
+  return featuredScenarioIds
+    .map((scenarioId) => scenarioCatalog.find((entry) => entry.id === scenarioId))
+    .filter((scenario): scenario is NonNullable<typeof scenario> => Boolean(scenario))
+    .map((scenario) => ({
+      id: scenario.id,
+      title: scenario.title,
+      summary: scenario.summary,
+      objective: scenario.objective,
+      primaryCommand: scenario.primaryCommand,
+      playgroundHref: scenario.playgroundHref,
+      primaryDoc: getCommandDocForInput(scenario.primaryCommand)
+    }));
 }
 
 export function getCommandDocBySlug(slug: string): CommandDoc | undefined {

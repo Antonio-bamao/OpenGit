@@ -1,6 +1,6 @@
 # 当前状态
 - 当前阶段：Phase 2，MVP Playground 核心体验打磨。
-- 已完成：完成 Git command parser、Git simulator、交互式 `/playground` 闭环、flow effect 可视化、HEAD/branch/origin 引用视图、`clone/fetch/pull/push/reset/revert/tag/worktree` 等核心命令模拟、`/scenarios` 场景入口页、场景预设加载，以及全局计划里的六个核心场景 `solo-project`、`team-collab`、`conflict-resolution`、`version-rollback`、`release-management`、`worktree-parallel` 全部升级为 ready。文档侧已完成 `/docs` 最小入口、`/docs/[slug]` 单命令详情页、`/docs` 总览页的实时命令搜索、关键词别名与推荐练习场景引导、Playground 学习面板中的当前命令解释、docs 详情页回跳到具体场景步骤的练习指引，以及“做完这一步后建议看哪条命令”的下一步引导。
-- 进行中：从“文档详情页练习闭环收口”切到“任务后续引导增强”，继续补强 docs、scenarios、playground 之间的往返路径与教学提示。
-- 下一步：继续打磨 Playground 与 docs 的双向联动，例如把下一步推荐命令做成更显眼的高频入口，或在 `/docs` 总览页显式展示“更适合从场景进入”的命令集合。 
+- 已完成：完成 Git command parser、Git simulator、交互式 `/playground` 闭环、flow effect 可视化、HEAD/branch/origin 引用视图、`clone/fetch/pull/push/reset/revert/tag/worktree` 等核心命令模拟、`/scenarios` 场景入口页、场景预设加载，以及全局计划里的六个核心场景 `solo-project`、`team-collab`、`conflict-resolution`、`version-rollback`、`release-management`、`worktree-parallel` 全部升级为 ready。文档侧已完成 `/docs` 最小入口、`/docs/[slug]` 单命令详情页、`/docs` 总览页的实时命令搜索、关键词别名与推荐练习场景引导、Playground 学习面板中的当前命令解释、docs 详情页回跳到具体场景步骤的练习指引、“做完这一步后建议看哪条命令”的下一步引导，以及 `/docs` 顶部的高频场景快捷入口。
+- 进行中：从“任务后续引导增强”切到“docs 总览入口优化”，继续补强 docs、scenarios、playground 之间的往返路径与教学提示。
+- 下一步：继续打磨 `/docs` 总览页和 Playground 的联动，例如给高频场景入口补更明确的场景优先级，或把下一步推荐命令做成更显眼的视觉焦点。 
 - 阻塞项：无当前阻塞。`pnpm test`、`pnpm lint`、`pnpm build` 均已通过；`http://127.0.0.1:3900/docs`、`http://127.0.0.1:3900/docs/pull`、`http://127.0.0.1:3900/docs/status`、`http://127.0.0.1:3900/docs/log`、`http://127.0.0.1:3900/playground?scenario=conflict-resolution&command=git%20status`、`http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20log`、`http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20add%20README.md` 均返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`；本地 visual companion 仍不可访问，但不影响当前代码推进。

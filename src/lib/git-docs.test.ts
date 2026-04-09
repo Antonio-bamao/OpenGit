@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   commandDocs,
+  getFeaturedDocScenarios,
   getAllCommandDocSlugs,
   getCommandDocBySlug,
   getCommandDocForInput,
@@ -122,6 +123,33 @@ describe("git-docs", () => {
     });
 
     expect(getPracticeGuidanceForCommandDoc("missing")).toBeUndefined();
+  });
+
+  it("builds featured scenario shortcuts for the docs landing page", () => {
+    const entries = getFeaturedDocScenarios();
+
+    expect(entries.map((entry) => entry.id)).toEqual([
+      "solo-project",
+      "team-collab",
+      "conflict-resolution",
+      "version-rollback"
+    ]);
+    expect(entries[0]).toMatchObject({
+      title: "从零开始个人项目",
+      playgroundHref: "/playground?scenario=solo-project&command=git%20init",
+      primaryDoc: {
+        id: "init",
+        detailHref: "/docs/init"
+      }
+    });
+    expect(entries[2]).toMatchObject({
+      title: "处理冲突",
+      primaryCommand: "git pull",
+      primaryDoc: {
+        id: "pull",
+        detailHref: "/docs/pull"
+      }
+    });
   });
 
   it("returns the full grouped catalog when the search query is empty", () => {

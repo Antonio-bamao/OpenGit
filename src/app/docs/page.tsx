@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/layout/AppHeader";
 import { DocsExplorer } from "@/components/docs/DocsExplorer";
+import { DocsScenarioQuickstart } from "@/components/docs/DocsScenarioQuickstart";
 
 export default function DocsPage() {
   return (
@@ -15,6 +16,7 @@ export default function DocsPage() {
             先用轻量命令卡理解语法和使用场景，再一键跳回 Playground 亲手练。
           </p>
         </div>
+        <DocsScenarioQuickstart />
         <DocsExplorer />
       </section>
     </main>

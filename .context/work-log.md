@@ -219,3 +219,10 @@
 - 结果：Playground 现在不只会告诉用户“当前这一步怎么做”，还会顺手提示“做完这一步后建议先看什么”，让从当前任务流向下一条命令的过渡更顺，不用再自己翻 checklist 猜下一步。
 - 验证：`pnpm test src/lib/git-sim/playground-view-model.test.ts` 通过 1 个测试文件、7 个测试；`pnpm test` 通过 9 个测试文件、57 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I "http://127.0.0.1:3900/playground?scenario=solo-project&command=git%20add%20README.md"` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=version-rollback&command=git%20revert%20HEAD"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
 - 下一步：继续把这类引导做得更显眼，例如在 `/docs` 总览页整理“高频场景入口”或在 Playground 中给下一步推荐加更强的视觉优先级。 
+
+## 2026-04-10 00:25｜给 `/docs` 总览页补高频场景入口
+- 目标：让用户如果是从“我想练某个真实任务”出发，而不是从“我想查某条命令”出发，也能在 `/docs` 快速落到合适入口
+- 动作：按 TDD 为 `git-docs` 增加 `getFeaturedDocScenarios` 测试；在 `src/lib/git-docs.ts` 中派生四个高频场景快捷入口，并把场景主命令与对应 docs 详情页关联起来；新增 `src/components/docs/DocsScenarioQuickstart.tsx` 渲染快捷卡片；在 `src/app/docs/page.tsx` 顶部接入该区块，让用户可以从场景直接开始，或先看对应命令。
+- 结果：`/docs` 现在不只是命令索引页，也有了“从零开始个人项目 / 加入团队项目 / 处理冲突 / 版本回退与修复”这四条高频练习路径的快捷入口；对不熟 Git 命令名、但知道自己要做什么任务的用户更友好。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、11 个测试；`pnpm test` 通过 9 个测试文件、58 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=team-collab&command=git%20switch%20-c%20feature%2Fteam-work"` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续增强这些入口的层次感，例如标出“最适合新手先练”的场景，或把 Playground 里的下一步推荐和 `/docs` 顶部入口做成同一套优先级。 
