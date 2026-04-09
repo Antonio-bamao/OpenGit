@@ -170,3 +170,31 @@
 - 结果：`conflict-resolution` 现已成为 ready 场景，用户可从 `/scenarios` 直接进入一个“本地和远端都改了 README.md”的仓库，体验一次完整的 pull 冲突、检查 unmerged paths、标记解决并提交收尾的流程；至此全局计划中的六张核心场景卡都已进入 ready。
 - 验证：`pnpm test` 通过 8 个测试文件、47 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/scenarios` 返回 200；`curl -I "http://127.0.0.1:3900/playground?scenario=conflict-resolution&command=git%20pull"` 返回 200。
 - 下一步：从场景补齐切换到文档入口建设，优先推进 `/docs` 最小命令参考页面，并把现有场景命令和文档查阅打通。
+
+## 2026-04-09 23:03｜落地 `/docs` 最小命令参考入口
+- 目标：实现 `/docs` 最小命令参考入口，并把场景与 Playground 接到对应命令文档
+- 动作：按 TDD 为命令文档数据模型、五类分组顺序、19 条已支持命令覆盖率，以及命令输入到 `/docs#...` 锚点的映射写红灯测试；新增 `src/lib/git-docs.ts` 维护文档元数据和链接 helper；新增 `/docs` 页面，按 basics / branching / remote / advanced / worktree 渲染命令卡片；在 `AppHeader`、首页 CTA、场景页和 `LearningPathPanel` 中接入 docs 入口与“查看命令解释”跳转。
+- 结果：应用现在拥有可访问的 `/docs` 入口，用户可以按分类查当前已支持命令的语法、用途与 Playground 试跑链接，也可以从场景页和 Playground 学习面板直接跳到对应命令的文档锚点，形成“练习 -> 查阅 -> 再练习”的最小闭环。
+- 验证：`pnpm test` 通过 9 个测试文件、50 个测试；`pnpm lint` 无警告；`pnpm build` 成功并生成 `/docs`；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I http://127.0.0.1:3900/docs#git-pull` 返回 200。
+- 下一步：继续把 `/docs` 从单页入口深化为更清晰的单命令深链体验，例如补 `/docs/[slug]` 详情页或更强的分类/检索入口。
+
+## 2026-04-09 23:07｜把 `/docs` 深化为 `/docs/[slug]` 单命令详情页
+- 目标：把 `/docs` 从列表入口深化为可直接分享和跳转的单命令详情页
+- 动作：按 TDD 为 docs slug 深链、命令详情查找和静态参数生成写红灯测试；在 `src/lib/git-docs.ts` 中为每条命令加入 `detailHref`，补齐 `getCommandDocBySlug` 与 `getAllCommandDocSlugs`；新增 `src/app/docs/[slug]/page.tsx`，渲染命令详情、同分类命令和 Playground 试跑入口；把场景页和 Playground 面板里的 docs 跳转统一切到 `/docs/[slug]` 深链。
+- 结果：用户现在不仅能在 `/docs` 看分类总览，还能直接打开 `/docs/pull`、`/docs/worktree` 这种稳定详情页，适合从场景、Playground 或后续搜索入口直接落到单命令解释。
+- 验证：`pnpm test` 通过 9 个测试文件、51 个测试；`pnpm lint` 无警告；`pnpm build` 成功并静态生成 19 个 `/docs/[slug]` 页面；`curl -I http://127.0.0.1:3900/docs/pull` 返回 200；`curl -I http://127.0.0.1:3900/docs/worktree` 返回 200。
+- 下一步：继续为 `/docs` 增加更强的分类导航或命令搜索，让用户更快定位到目标命令。
+
+## 2026-04-09 23:16｜为 `/docs` 增加命令搜索
+- 目标：在不引入复杂检索系统的前提下，让用户能在 `/docs` 里更快定位到目标命令
+- 动作：按 TDD 为命令搜索 helper 增加空查询、命令名匹配和简介/用途匹配测试；在 `src/lib/git-docs.ts` 中新增 `searchGroupedCommandDocs`；新增 `src/components/docs/DocsExplorer.tsx` 作为客户端搜索入口，使用 `useDeferredValue` 做实时过滤，并保留分类锚点、详情页与 Playground 跳转；把 `/docs` 页面切换到新 explorer 组件承载搜索与空状态。
+- 结果：用户现在可以在 `/docs` 按命令名、语法、简介和用途实时过滤 19 条已支持命令；搜索结果仍保留分组结构，并可继续跳到 `/docs/[slug]` 或直接回 Playground 试跑；无结果时也会给出友好提示，不再只能靠滚动列表查命令。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、7 个测试；`pnpm test` 通过 9 个测试文件、54 个测试；`pnpm lint` 无警告；`pnpm build` 成功并生成可用的 `/docs` 页面；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I http://127.0.0.1:3900/docs/pull` 返回 200。
+- 下一步：继续补强 `/docs` 搜索后的定位体验，例如扩充关键词覆盖、增加结果引导，或把场景推荐命令和 docs 检索进一步联动。
+
+## 2026-04-09 23:26｜补强 `/docs` 搜索关键词与推荐练习入口
+- 目标：让用户不只“搜得到命令”，还更容易基于意图关键词找到答案，并顺手回到合适场景继续练习
+- 动作：按 TDD 为命令文档增加推荐场景元数据和“回滚”类关键词别名测试；在 `src/lib/git-docs.ts` 中为命令补充 `keywords` 与 `practiceScenario`，并让 `searchGroupedCommandDocs` 一并检索这些字段；在 `src/components/docs/DocsExplorer.tsx` 的搜索结果中新增“练这个场景”入口与无结果推荐关键词；重写 `src/app/docs/[slug]/page.tsx`，补上推荐练习场景卡片和回场景按钮，同时清理此前详情页里的乱码文案。
+- 结果：`/docs` 现在不仅能搜命令名，还能用“回滚”“远程协作”“热修复”“撤销暂存”这类意图词命中相关命令；命令结果和详情页也都能直接跳回推荐场景，教学链路从“查命令”延伸到“回场景练习”。
+- 验证：`pnpm test src/lib/git-docs.test.ts` 通过 1 个测试文件、8 个测试；`pnpm test` 通过 9 个测试文件、55 个测试；`pnpm lint` 无警告；`pnpm build` 成功；`curl -I http://127.0.0.1:3900/docs` 返回 200；`curl -I http://127.0.0.1:3900/docs/pull` 返回 200；`validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit` 返回 `context is valid`。
+- 下一步：继续把 docs 与当前 Playground 任务做得更贴合，例如从当前学习步骤直接推荐对应命令文档，或在 docs 中显式标出“适合从哪个场景进入”。 

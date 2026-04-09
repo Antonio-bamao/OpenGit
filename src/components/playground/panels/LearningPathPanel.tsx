@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { LearningChecklistItem, LearningScenario } from "@/lib/git-sim/learning-guide";
+import { getDocsHrefForCommandInput } from "@/lib/git-docs";
 
 interface LearningPathPanelProps {
   activeTask?: LearningChecklistItem;
@@ -8,6 +10,8 @@ interface LearningPathPanelProps {
 }
 
 export function LearningPathPanel({ activeTask, checklist, scenario, onFillCommand }: LearningPathPanelProps) {
+  const docsHref = activeTask ? getDocsHrefForCommandInput(activeTask.command) : "/docs";
+
   return (
     <div className="mb-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -19,13 +23,21 @@ export function LearningPathPanel({ activeTask, checklist, scenario, onFillComma
           </p>
         </div>
         {activeTask ? (
-          <button
-            type="button"
-            onClick={() => onFillCommand(activeTask.command)}
-            className="min-h-9 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
-          >
-            填入下一步
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={docsHref}
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            >
+              查看命令解释
+            </Link>
+            <button
+              type="button"
+              onClick={() => onFillCommand(activeTask.command)}
+              className="min-h-9 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition duration-200 hover:border-emerald-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            >
+              填入下一步
+            </button>
+          </div>
         ) : null}
       </div>
       <div className="mt-3 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 sm:grid-cols-2">

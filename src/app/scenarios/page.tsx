@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/layout/AppHeader";
+import { getDocsHrefForCommandInput } from "@/lib/git-docs";
 import { scenarioCatalog } from "@/lib/git-sim/scenario-catalog";
 
 export default function ScenariosPage() {
@@ -73,6 +74,12 @@ export default function ScenariosPage() {
                     等待命令模型扩展
                   </span>
                 )}
+                <Link
+                  href={getDocsHrefForCommandInput(scenario.primaryCommand)}
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+                >
+                  查看相关命令
+                </Link>
                 <span className="font-mono text-xs text-slate-500">{scenario.primaryCommand}</span>
               </div>
             </article>
