@@ -1,4 +1,5 @@
 import type { GitState } from "./types";
+import { getScenarioPreset } from "./scenario-presets";
 
 export interface LearningChecklistItem {
   id: string;
@@ -8,12 +9,20 @@ export interface LearningChecklistItem {
   goal: string;
 }
 
+export interface LearningScenarioTeachingNote {
+  tone: "conflict" | "release" | "worktree";
+  eyebrow: string;
+  title: string;
+  body: string;
+}
+
 export interface LearningScenario {
   id: string;
   title: string;
   summary: string;
   objective: string;
   successCriteria: string;
+  teachingNote?: LearningScenarioTeachingNote;
   checklist: LearningChecklistItem[];
   activeTask: LearningChecklistItem | undefined;
   completedTaskCount: number;
@@ -150,6 +159,12 @@ export function getConflictResolutionScenario(state: GitState): LearningScenario
     summary: "让本地改动和 teammate 的远端改动在同一文件上相撞，再亲手完成一次冲突解决。",
     objective: "看清 pull 冲突不是失败终点，而是一次需要检查、标记解决并提交收尾的合并过程。",
     successCriteria: "能触发一次 pull 冲突、看到 unmerged paths、用 git add 标记已解决，并写出一条 resolve conflict 提交。",
+    teachingNote: {
+      tone: "conflict",
+      eyebrow: "冲突观察点",
+      title: "冲突不是失败，而是 Git 把最后决定权交还给你",
+      body: "先看 git pull 后出现的 unmerged paths，再把 git add 理解为“标记已解决”，最后用一条清晰的提交把这次人工合并正式收尾。"
+    },
     checklist: [
       {
         id: "trigger-conflict",
@@ -195,6 +210,12 @@ export function getReleaseManagementScenario(state: GitState): LearningScenario 
     summary: "从稳定提交切出 release 分支，打上版本标签，再把 tags 推到远端。",
     objective: "理解 release 分支和 tag 如何共同定义一个可追溯的发布节点。",
     successCriteria: "release 分支存在，v1.0.0 指向当前提交，并且 origin 上也存在同名标签。",
+    teachingNote: {
+      tone: "release",
+      eyebrow: "发布视角",
+      title: "release 分支负责收口，tag 负责给发布点命名",
+      body: "这里要分清三个对象：release 分支承载发布收口，v1.0.0 tag 锚定当前提交，而 git push --tags 才会让远端也拥有同一个版本坐标。"
+    },
     checklist: [
       {
         id: "release-branch",
@@ -242,6 +263,12 @@ export function getWorktreeParallelScenario(state: GitState): LearningScenario {
     summary: "保留正在进行的 feature/payment，同时额外拉出一个 hotfix 工作目录处理紧急问题。",
     objective: "理解 worktree 如何让同一仓库在不同目录里并行 checkout 多个分支，而不打断当前开发上下文。",
     successCriteria: "主工作目录仍停留在 feature/payment，额外挂载过 ../hotfix -> main，并能在演示完成后安全移除。",
+    teachingNote: {
+      tone: "worktree",
+      eyebrow: "并行开发视角",
+      title: "hotfix 借道 main，但你当前的 feature/payment 不该被打断",
+      body: "关键不是多一个目录，而是当前工作目录继续停在 feature/payment。你应该同时观察 Worktrees 区里的 ../hotfix -> main，以及主目录上下文没有被切走。"
+    },
     checklist: [
       {
         id: "create-hotfix-tree",
@@ -318,6 +345,18 @@ export function getLearningChecklist(state: GitState): LearningChecklistItem[] {
       completed: hasRemoteCommits
     }
   ];
+}
+
+export function getScenarioTeachingNote(scenarioId: string): LearningScenarioTeachingNote | undefined {
+  if (
+    scenarioId !== "conflict-resolution" &&
+    scenarioId !== "release-management" &&
+    scenarioId !== "worktree-parallel"
+  ) {
+    return undefined;
+  }
+
+  return getLearningScenario(getScenarioPreset(scenarioId).gitState, scenarioId).teachingNote;
 }
 
 function getTeamCollaborationChecklist(state: GitState): LearningChecklistItem[] {

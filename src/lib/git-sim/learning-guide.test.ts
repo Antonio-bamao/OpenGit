@@ -5,6 +5,7 @@ import {
   getActiveLearningScenario,
   getLearningChecklist,
   getLearningScenario,
+  getScenarioTeachingNote,
   getSoloProjectScenario,
   getTeamCollaborationScenario,
   getWorktreeParallelScenario
@@ -113,6 +114,10 @@ describe("getLearningChecklist", () => {
     expect(scenario.id).toBe("release-management");
     expect(scenario.title).toBe("发布管理");
     expect(scenario.activeTask?.command).toBe("git branch release");
+    expect(scenario.teachingNote).toMatchObject({
+      eyebrow: "发布视角",
+      title: "release 分支负责收口，tag 负责给发布点命名"
+    });
   });
 
   it("describes the conflict-resolution scenario from pull conflict to resolution commit", () => {
@@ -143,6 +148,10 @@ describe("getLearningChecklist", () => {
     let scenario = getConflictResolutionScenario(state);
     expect(scenario.progressLabel).toBe("0/4");
     expect(scenario.activeTask?.command).toBe("git pull");
+    expect(scenario.teachingNote).toMatchObject({
+      eyebrow: "冲突观察点",
+      title: "冲突不是失败，而是 Git 把最后决定权交还给你"
+    });
 
     state = executeGitCommand(state, "git pull").state;
     scenario = getConflictResolutionScenario(state);
@@ -192,6 +201,10 @@ describe("getLearningChecklist", () => {
     let scenario = getWorktreeParallelScenario(state);
     expect(scenario.progressLabel).toBe("0/4");
     expect(scenario.activeTask?.command).toBe("git worktree add ../hotfix main");
+    expect(scenario.teachingNote).toMatchObject({
+      eyebrow: "并行开发视角",
+      title: "hotfix 借道 main，但你当前的 feature/payment 不该被打断"
+    });
 
     state = executeGitCommand(state, "git worktree add ../hotfix main").state;
     scenario = getWorktreeParallelScenario(state);
@@ -228,5 +241,21 @@ describe("getLearningChecklist", () => {
     expect(scenario.id).toBe("worktree-parallel");
     expect(scenario.title).toBe("Worktree 多分支并行开发");
     expect(scenario.activeTask?.command).toBe("git worktree add ../hotfix main");
+  });
+
+  it("exposes reusable teaching notes for advanced scenario entry points", () => {
+    expect(getScenarioTeachingNote("conflict-resolution")).toMatchObject({
+      tone: "conflict",
+      eyebrow: "冲突观察点"
+    });
+    expect(getScenarioTeachingNote("release-management")).toMatchObject({
+      tone: "release",
+      eyebrow: "发布视角"
+    });
+    expect(getScenarioTeachingNote("worktree-parallel")).toMatchObject({
+      tone: "worktree",
+      eyebrow: "并行开发视角"
+    });
+    expect(getScenarioTeachingNote("solo-project")).toBeUndefined();
   });
 });

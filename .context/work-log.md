@@ -279,3 +279,38 @@
 - 结果：Playground 现在会把临近完成时的推荐呈现为低一层的‘下一站预告’，而把场景完成后的推荐呈现为更明确的‘Next Path’ 收尾卡；两者继续复用同一套推荐数据，但在文案、底色和按钮主次上已经能一眼区分。
 - 验证：pnpm test 62/62 通过；pnpm lint 通过；pnpm build 通过。
 - 下一步：继续打磨 conflict-resolution、release-management、worktree-parallel 等进阶场景的提示文案与视觉细节，提升问题处理、发布和并行开发的教学解释力。
+
+## 2026-04-10 21:41｜补强 conflict-resolution、release-management、worktree-parallel 三个进阶场景的教学解释力，让用户更容易一眼看懂每个场景要观察什么。
+- 目标：补强 conflict-resolution、release-management、worktree-parallel 三个进阶场景的教学解释力，让用户更容易一眼看懂每个场景要观察什么。
+- 动作：按 TDD 先在 src/lib/git-sim/learning-guide.test.ts 为三个进阶场景补上 teachingNote 失败断言；随后在 src/lib/git-sim/learning-guide.ts 中新增可选 teachingNote 数据，为冲突、发布和 worktree 提供各自的观察重点与解释文案；更新 src/components/playground/panels/LearningPathPanel.tsx，在面板顶部渲染轻量教学重点卡；同时修订 src/lib/git-sim/scenario-catalog.ts 与 src/lib/git-sim/scenario-presets.ts 的摘要和预设提示文案，让入口描述与 Playground 内提示保持一致。
+- 结果：用户进入 conflict-resolution 时会先看到冲突不是失败、而是人工合并流程的提示；进入 release-management 时会先看到 release 分支与 tag 的分工；进入 worktree-parallel 时会先看到 hotfix 借道 main 但当前 feature/payment 不该被打断的重点。三种场景在 Playground 顶部都有轻量但明显不同的教学提示卡，场景卡与预设引导文案也更贴近实际学习重点。
+- 验证：pnpm test 62/62 通过；pnpm test src/lib/git-sim/scenario-presets.test.ts 在提权重跑后通过；pnpm lint 通过；pnpm build 通过。
+- 下一步：把这些进阶场景的观察重点继续延伸到 /scenarios 场景卡或 docs 入口，让用户在进入 Playground 前就知道每个场景最值得观察的信号。
+
+## 2026-04-10 21:57｜把 conflict / release / worktree 三类进阶场景的观察重点继续前置到 /scenarios 入口层，让用户在进入 Playground 前就知道该看什么。
+- 目标：把 conflict / release / worktree 三类进阶场景的观察重点继续前置到 /scenarios 入口层，让用户在进入 Playground 前就知道该看什么。
+- 动作：按 TDD 先在 src/lib/git-sim/learning-guide.test.ts 为 getScenarioTeachingNote helper 补失败断言；随后在 src/lib/git-sim/learning-guide.ts 中新增 getScenarioTeachingNote，复用现有 teachingNote 数据而不复制文案；最后更新 src/app/scenarios/page.tsx，在 conflict-resolution、release-management、worktree-parallel 三张卡片上渲染与 Playground 同源的观察重点提示卡，并沿用对应的轻量色彩语气。
+- 结果：用户现在在 /scenarios 里就能提前看到冲突要关注 unmerged paths 与人工收尾、发布要分清 release 分支和 tag 的分工、worktree 要观察 ../hotfix 与当前 feature/payment 如何并行存在。入口层和 Playground 内部的教学提示保持了同一套来源，不会出现两边文案慢慢漂移。
+- 验证：pnpm test 63/63 通过；pnpm lint 通过；pnpm build 通过；validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit 通过。
+- 下一步：把这三类进阶场景的观察重点继续延伸到 docs 入口或对应命令详情页，让用户在查命令时也能看到同一套冲突 / 发布 / worktree 观察视角。
+
+## 2026-04-10 22:12｜把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 docs 命令详情页，让用户在查命令时也能看到同一套教学视角。
+- 目标：把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 docs 命令详情页，让用户在查命令时也能看到同一套教学视角。
+- 动作：按 TDD 先在 src/lib/git-docs.test.ts 为 getPracticeTeachingNoteForCommandDoc 补失败断言；随后在 src/lib/git-docs.ts 中新增该 helper，复用已有 getScenarioTeachingNote 而不复制文案；最后更新 src/app/docs/[slug]/page.tsx，在 Recommended Flow 区块下方渲染与 Playground、/scenarios 同源的轻量观察重点提示卡，并沿用 conflict / release / worktree 三种轻色语气。
+- 结果：像 /docs/pull、/docs/branch、/docs/tag、/docs/worktree 这样的命令详情页，现在除了知道该在哪个场景练、该回到哪一步，也会直接看到对应场景最值得观察的教学重点。这样用户在 docs、scenarios 和 Playground 三个入口里都能持续收到同一套冲突 / 发布 / worktree 观察视角。
+- 验证：pnpm test 64/64 通过；pnpm lint 通过；pnpm build 通过；validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit 通过。
+- 下一步：把这三类进阶场景的观察重点继续延伸到 docs 总览入口，例如 DocsScenarioQuickstart 或 DocsExplorer 的相关命令卡，让用户在搜索或浏览命令列表时也能一眼知道各自该观察什么。
+
+## 2026-04-10 22:22｜把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 docs 总览入口，先补到 DocsScenarioQuickstart。
+- 目标：把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 docs 总览入口，先补到 DocsScenarioQuickstart。
+- 动作：按 TDD 先在 src/lib/git-docs.test.ts 为 featured 场景补 teachingNote 失败断言；随后在 src/lib/git-docs.ts 中把 getFeaturedDocScenarios 扩展为同时暴露 teachingNote；最后更新 src/components/docs/DocsScenarioQuickstart.tsx，在 conflict-resolution 场景卡上渲染与 Playground、/scenarios、/docs/[slug] 同源的轻量观察重点提示卡，并沿用对应的冲突色彩语气。
+- 结果：用户现在在 docs 总览页的 Quickstart 区块里，就能提前看到进阶场景最值得观察的教学重点，不必先点进场景或命令详情才知道冲突 / 发布 / worktree 分别要关注什么。这样 docs 总览、命令详情、场景卡和 Playground 已经共享同一套教学 cue。
+- 验证：pnpm test 64/64 通过；pnpm lint 通过；pnpm build 通过；validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit 通过。
+- 下一步：把这三类进阶场景的观察重点继续延伸到 DocsExplorer 的相关命令卡，让用户在搜索或浏览 pull、branch、tag、worktree 等命令时也能一眼知道各自该观察什么。
+
+## 2026-04-10 22:25｜把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 DocsExplorer 的相关命令卡，让 docs 搜索/浏览列表也能承接同一套教学 cue。
+- 目标：把 conflict / release / worktree 三类进阶场景的观察重点继续延伸到 DocsExplorer 的相关命令卡，让 docs 搜索/浏览列表也能承接同一套教学 cue。
+- 动作：按 TDD 先在 src/lib/git-docs.test.ts 为 commandDocs 补上 practiceTeachingNote 失败断言；随后在 src/lib/git-docs.ts 中给 CommandDoc 增加 practiceTeachingNote 字段，并在创建命令文档时复用已有 getScenarioTeachingNote；最后更新 src/components/docs/DocsExplorer.tsx，在 pull、branch、tag、worktree 等相关命令卡上渲染轻量观察重点提示，沿用 conflict / release / worktree 的三种色彩语气。
+- 结果：用户现在无论是从 DocsScenarioQuickstart、DocsExplorer、命令详情页、场景卡还是 Playground 进入，都能看到同一套冲突 / 发布 / worktree 教学观察重点。docs 这条入口链路已经基本闭环，不再只有‘查命令’，而是能提前告诉用户为什么这个命令值得这样练。
+- 验证：pnpm test 64/64 通过；pnpm lint 通过；pnpm build 通过；validate_context.py --project-root c:/Users/m1591/Desktop/OpenGit 通过。
+- 下一步：回到整体体验打磨，评估 docs 总览与 Playground 是否已经接近信息饱和，然后决定是压缩提示密度，还是转向下一批更高价值的教学解释力优化点。

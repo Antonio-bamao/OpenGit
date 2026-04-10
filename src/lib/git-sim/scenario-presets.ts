@@ -111,9 +111,9 @@ function createConflictResolutionPreset(): ScenarioPreset {
     history: [
       createScenarioEntry(
         gitState,
-        "已载入冲突场景：你本地和 teammate 都改了 README.md。先执行 git pull 触发冲突，再看 status、add、commit 如何完成收尾。",
+        "已载入冲突场景：你本地和 teammate 都改了 README.md。先执行 git pull 把 unmerged paths 拉到台面上，再用 status、add、commit 完成这次人工合并。",
         "冲突场景已就绪",
-        "这里提前准备好了同一文件上的本地与远端分叉，让你专注观察 unmerged paths、冲突解决和最终提交。"
+        "这里提前准备好了同一文件上的本地与远端分叉，让你专注观察 unmerged paths、git add 的“标记已解决”含义，以及最后那条收尾提交。"
       )
     ],
     initialCommand: "git pull"
@@ -131,9 +131,9 @@ function createReleaseManagementPreset(): ScenarioPreset {
     history: [
       createScenarioEntry(
         gitState,
-        "已载入发布场景，main 上已经有一个稳定提交。先切出 release 分支，再打标签并推送 tags。",
+        "已载入发布场景，main 上已经有一个稳定提交。先切出 release 分支，再给当前提交打上 v1.0.0，并把 tags 推到远端。",
         "发布管理场景已就绪",
-        "这里重点观察 release 分支、标签和远端标签如何一起定义一个明确的发布节点。"
+        "这里重点观察 release 分支如何负责发布收口，tag 如何给提交命名，以及 origin/tags 为什么能成为远端发布坐标。"
       )
     ],
     initialCommand: "git branch release"
@@ -153,9 +153,9 @@ function createWorktreeParallelPreset(): ScenarioPreset {
     history: [
       createScenarioEntry(
         gitState,
-        "已载入 worktree 场景，你当前停在 feature/payment。下一步用 git worktree add ../hotfix main 拉出独立 hotfix 目录。",
+        "已载入 worktree 场景，你当前停在 feature/payment。下一步用 git worktree add ../hotfix main 拉出独立 hotfix 目录，同时保持当前开发线不被切走。",
         "Worktree 场景已就绪",
-        "这里提前准备了一条进行中的 feature 分支，让你观察紧急 hotfix 到来时，为什么 worktree 比来回 stash / checkout 更稳。"
+        "这里提前准备了一条进行中的 feature 分支，让你观察 ../hotfix -> main 和当前 feature/payment 如何并行存在，以及为什么 worktree 比来回 stash / checkout 更稳。"
       )
     ],
     initialCommand: "git worktree add ../hotfix main"

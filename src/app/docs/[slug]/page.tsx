@@ -7,7 +7,8 @@ import {
   getFeaturedScenarioMeta,
   getNextFeaturedScenarioForCommandDoc,
   getGroupedCommandDocs,
-  getPracticeGuidanceForCommandDoc
+  getPracticeGuidanceForCommandDoc,
+  getPracticeTeachingNoteForCommandDoc
 } from "@/lib/git-docs";
 
 interface CommandDocDetailPageProps {
@@ -28,8 +29,27 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
   }
 
   const practiceGuidance = getPracticeGuidanceForCommandDoc(doc.id);
+  const practiceTeachingNote = getPracticeTeachingNoteForCommandDoc(doc.id);
   const practicePriority = practiceGuidance ? getFeaturedScenarioMeta(practiceGuidance.scenario.id) : undefined;
   const nextFeaturedScenario = getNextFeaturedScenarioForCommandDoc(doc.id);
+  const teachingNoteClassMap = {
+    conflict: {
+      container: "border-rose-200 bg-rose-50/80",
+      eyebrow: "text-rose-700",
+      title: "text-rose-900"
+    },
+    release: {
+      container: "border-sky-200 bg-sky-50/80",
+      eyebrow: "text-sky-700",
+      title: "text-sky-900"
+    },
+    worktree: {
+      container: "border-amber-200 bg-amber-50/80",
+      eyebrow: "text-amber-700",
+      title: "text-amber-900"
+    }
+  } as const;
+  const teachingNoteClasses = practiceTeachingNote ? teachingNoteClassMap[practiceTeachingNote.tone] : undefined;
   const siblingCommands =
     getGroupedCommandDocs()
       .find((group) => group.id === doc.category)
@@ -112,6 +132,16 @@ export default function CommandDocDetailPage({ params }: CommandDocDetailPagePro
                     先看场景总览
                   </Link>
                 </div>
+
+                {practiceTeachingNote && teachingNoteClasses ? (
+                  <div className={`mt-4 rounded-md border px-3 py-3 text-sm ${teachingNoteClasses.container}`}>
+                    <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${teachingNoteClasses.eyebrow}`}>
+                      {practiceTeachingNote.eyebrow}
+                    </p>
+                    <p className={`mt-2 font-semibold ${teachingNoteClasses.title}`}>{practiceTeachingNote.title}</p>
+                    <p className="mt-2 leading-6 text-slate-700">{practiceTeachingNote.body}</p>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 

@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { getDocsHrefForCommandInput, getFeaturedDocScenarios } from "@/lib/git-docs";
+import { getScenarioTeachingNote } from "@/lib/git-sim/learning-guide";
 import { scenarioCatalog } from "@/lib/git-sim/scenario-catalog";
 
 export default function ScenariosPage() {
   const featuredScenarioMap = new Map(
     getFeaturedDocScenarios().map((scenario) => [scenario.id, scenario] as const)
+  );
+  const scenarioTeachingNoteMap = new Map(
+    scenarioCatalog.map((scenario) => [scenario.id, getScenarioTeachingNote(scenario.id)] as const)
   );
 
   return (
@@ -28,6 +32,25 @@ export default function ScenariosPage() {
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {scenarioCatalog.map((scenario, index) => {
             const featuredScenario = featuredScenarioMap.get(scenario.id);
+            const teachingNote = scenarioTeachingNoteMap.get(scenario.id);
+            const teachingNoteClassMap = {
+              conflict: {
+                container: "border-rose-200 bg-rose-50/80",
+                eyebrow: "text-rose-700",
+                title: "text-rose-900"
+              },
+              release: {
+                container: "border-sky-200 bg-sky-50/80",
+                eyebrow: "text-sky-700",
+                title: "text-sky-900"
+              },
+              worktree: {
+                container: "border-amber-200 bg-amber-50/80",
+                eyebrow: "text-amber-700",
+                title: "text-amber-900"
+              }
+            } as const;
+            const teachingNoteClasses = teachingNote ? teachingNoteClassMap[teachingNote.tone] : undefined;
 
             return (
               <article
@@ -75,6 +98,18 @@ export default function ScenariosPage() {
 
                 <p className="mt-4 leading-7 text-slate-600">{scenario.summary}</p>
                 <p className="mt-3 text-sm leading-6 text-slate-500">{scenario.objective}</p>
+
+                {teachingNote && teachingNoteClasses ? (
+                  <div className={`mt-4 rounded-lg border p-4 text-sm ${teachingNoteClasses.container}`}>
+                    <p
+                      className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${teachingNoteClasses.eyebrow}`}
+                    >
+                      {teachingNote.eyebrow}
+                    </p>
+                    <p className={`mt-2 font-semibold ${teachingNoteClasses.title}`}>{teachingNote.title}</p>
+                    <p className="mt-2 leading-6 text-slate-700">{teachingNote.body}</p>
+                  </div>
+                ) : null}
 
                 <ol className="mt-5 grid gap-2 sm:grid-cols-2">
                   {scenario.steps.map((step, stepIndex) => (

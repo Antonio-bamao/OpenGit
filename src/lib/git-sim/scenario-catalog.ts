@@ -42,8 +42,8 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
   {
     id: "conflict-resolution",
     title: "处理冲突",
-    summary: "两个人修改同一处内容后，通过 pull 看到冲突，再完成解决和提交。",
-    objective: "把冲突理解为两条历史对同一片内容的竞争修改。",
+    summary: "让本地和远端在同一文件上正面相撞，再把冲突处理完整地走到提交收尾。",
+    objective: "把冲突理解为一次人工合并流程，而不是一次单纯报错。",
     status: "ready",
     statusLabel: "可练习",
     primaryCommand: "git pull",
@@ -64,8 +64,8 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
   {
     id: "release-management",
     title: "发布管理",
-    summary: "围绕 GitHub Flow / Git Flow，连接 tag、release 和稳定分支。",
-    objective: "理解发布节点为什么是团队协作中的明确边界。",
+    summary: "从稳定提交切出 release 分支、打上版本标签，再把这个发布坐标同步到远端。",
+    objective: "理解 release 分支和 tag 如何一起定义一个可回溯的发布节点。",
     status: "ready",
     statusLabel: "可练习",
     primaryCommand: "git branch release",
@@ -75,8 +75,8 @@ export const scenarioCatalog: ScenarioCatalogItem[] = [
   {
     id: "worktree-parallel",
     title: "Worktree 多分支并行开发",
-    summary: "正在 feature 分支开发时，用 worktree 拉出 hotfix 工作目录。",
-    objective: "看清多个工作目录如何共享同一个仓库对象库，同时保持当前开发分支不被打断。",
+    summary: "保留当前 feature/payment，上下文不动，再单独拉出 ../hotfix 处理紧急修复。",
+    objective: "看清 worktree 如何在不打断当前开发线的前提下并行 checkout 多个分支。",
     status: "ready",
     statusLabel: "可练习",
     primaryCommand: "git worktree add ../hotfix main",

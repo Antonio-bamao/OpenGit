@@ -45,6 +45,24 @@ export function LearningPathPanel({
     nextPracticeScenario?.emphasis === "primary"
       ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
       : "border border-slate-200 bg-slate-50 text-slate-500";
+  const teachingNoteClassMap = {
+    conflict: {
+      container: "border-rose-200 bg-rose-50/80",
+      eyebrow: "text-rose-700",
+      title: "text-rose-900"
+    },
+    release: {
+      container: "border-sky-200 bg-sky-50/80",
+      eyebrow: "text-sky-700",
+      title: "text-sky-900"
+    },
+    worktree: {
+      container: "border-amber-200 bg-amber-50/80",
+      eyebrow: "text-amber-700",
+      title: "text-amber-900"
+    }
+  } as const;
+  const teachingNoteClasses = scenario.teachingNote ? teachingNoteClassMap[scenario.teachingNote.tone] : undefined;
 
   return (
     <div className="mb-5">
@@ -74,6 +92,15 @@ export function LearningPathPanel({
           </div>
         ) : null}
       </div>
+      {scenario.teachingNote && teachingNoteClasses ? (
+        <div className={`mt-3 rounded-lg border p-4 text-sm ${teachingNoteClasses.container}`}>
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${teachingNoteClasses.eyebrow}`}>
+            {scenario.teachingNote.eyebrow}
+          </p>
+          <p className={`mt-2 font-semibold ${teachingNoteClasses.title}`}>{scenario.teachingNote.title}</p>
+          <p className="mt-2 leading-6 text-slate-700">{scenario.teachingNote.body}</p>
+        </div>
+      ) : null}
       {activeTask && activeTaskDoc ? (
         <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-sm text-slate-700">
           <div className="flex flex-wrap items-start justify-between gap-3">

@@ -1,6 +1,6 @@
 import { scenarioCatalog } from "./git-sim/scenario-catalog";
 import { parseGitCommand } from "./git-sim/command-parser";
-import { getLearningScenario } from "./git-sim/learning-guide";
+import { getLearningScenario, getScenarioTeachingNote, type LearningScenarioTeachingNote } from "./git-sim/learning-guide";
 import { getScenarioPreset } from "./git-sim/scenario-presets";
 
 export type CommandDocCategory = "basics" | "branching" | "remote" | "advanced" | "worktree";
@@ -44,6 +44,7 @@ export interface CommandDoc {
   useCases: string[];
   keywords: string[];
   practiceScenario?: PracticeScenarioLink;
+  practiceTeachingNote?: LearningScenarioTeachingNote;
 }
 
 export interface CommandDocGroup {
@@ -66,6 +67,7 @@ export interface FeaturedDocScenario {
   pathIndex: number;
   pathTotal: number;
   nextScenario?: FeaturedDocScenarioPreview;
+  teachingNote?: LearningScenarioTeachingNote;
 }
 
 export interface FeaturedDocScenarioPreview {
@@ -167,7 +169,8 @@ function createCommandDoc(
     playgroundHref: createPlaygroundHref(playgroundCommand),
     useCases,
     keywords,
-    practiceScenario: getPracticeScenarioLink(practiceScenarioId)
+    practiceScenario: getPracticeScenarioLink(practiceScenarioId),
+    practiceTeachingNote: getScenarioTeachingNote(practiceScenarioId ?? "")
   };
 }
 
@@ -344,6 +347,17 @@ export function getPracticeGuidanceForCommandDoc(docId: string): PracticeGuidanc
   };
 }
 
+export function getPracticeTeachingNoteForCommandDoc(docId: string): LearningScenarioTeachingNote | undefined {
+  const doc = getCommandDocBySlug(docId);
+  const scenarioId = doc?.practiceScenario?.id;
+
+  if (!scenarioId) {
+    return undefined;
+  }
+
+  return getScenarioTeachingNote(scenarioId);
+}
+
 export function getFeaturedScenarioMeta(scenarioId: string) {
   return featuredScenarioMeta.find((entry) => entry.id === scenarioId);
 }
@@ -403,6 +417,7 @@ export function getFeaturedDocScenarios(): FeaturedDocScenario[] {
       primaryDoc: getCommandDocForInput(scenario.primaryCommand),
       pathIndex: index + 1,
       pathTotal,
+      teachingNote: getScenarioTeachingNote(scenario.id),
       nextScenario: nextEntry
         ? {
             id: nextEntry.scenario.id,

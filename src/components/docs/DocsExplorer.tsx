@@ -8,6 +8,23 @@ export function DocsExplorer() {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const groups = searchGroupedCommandDocs(deferredQuery);
+  const teachingNoteClassMap = {
+    conflict: {
+      container: "border-rose-200 bg-rose-50/80",
+      eyebrow: "text-rose-700",
+      title: "text-rose-900"
+    },
+    release: {
+      container: "border-sky-200 bg-sky-50/80",
+      eyebrow: "text-sky-700",
+      title: "text-sky-900"
+    },
+    worktree: {
+      container: "border-amber-200 bg-amber-50/80",
+      eyebrow: "text-amber-700",
+      title: "text-amber-900"
+    }
+  } as const;
 
   return (
     <>
@@ -69,6 +86,28 @@ export function DocsExplorer() {
                       {doc.syntax}
                     </p>
                     <p className="mt-4 leading-7 text-slate-600">{doc.summary}</p>
+
+                    {doc.practiceTeachingNote ? (
+                      <div
+                        className={`mt-4 rounded-lg border p-4 text-sm ${
+                          teachingNoteClassMap[doc.practiceTeachingNote.tone].container
+                        }`}
+                      >
+                        <p
+                          className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
+                            teachingNoteClassMap[doc.practiceTeachingNote.tone].eyebrow
+                          }`}
+                        >
+                          {doc.practiceTeachingNote.eyebrow}
+                        </p>
+                        <p
+                          className={`mt-2 font-semibold ${teachingNoteClassMap[doc.practiceTeachingNote.tone].title}`}
+                        >
+                          {doc.practiceTeachingNote.title}
+                        </p>
+                        <p className="mt-2 leading-6 text-slate-700">{doc.practiceTeachingNote.body}</p>
+                      </div>
+                    ) : null}
 
                     <ul className="mt-4 space-y-2 text-sm text-slate-600">
                       {doc.useCases.map((useCase) => (

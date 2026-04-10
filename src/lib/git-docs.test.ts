@@ -11,6 +11,7 @@ import {
   getDocsHrefForCommandInput,
   getGroupedCommandDocs,
   getPracticeGuidanceForCommandDoc,
+  getPracticeTeachingNoteForCommandDoc,
   searchGroupedCommandDocs
 } from "./git-docs";
 
@@ -50,6 +51,10 @@ describe("git-docs", () => {
       category: "remote",
       playgroundHref: "/playground?command=git%20pull",
       detailHref: "/docs/pull",
+      practiceTeachingNote: {
+        tone: "conflict",
+        eyebrow: "冲突观察点"
+      },
       practiceScenario: {
         id: "conflict-resolution",
         href: "/playground?scenario=conflict-resolution&command=git%20pull"
@@ -59,11 +64,16 @@ describe("git-docs", () => {
       category: "worktree",
       playgroundHref: "/playground?command=git%20worktree%20list",
       detailHref: "/docs/worktree",
+      practiceTeachingNote: {
+        tone: "worktree",
+        eyebrow: "并行开发视角"
+      },
       practiceScenario: {
         id: "worktree-parallel",
         href: "/playground?scenario=worktree-parallel&command=git%20worktree%20add%20..%2Fhotfix%20main"
       }
     });
+    expect(commandDocs.find((entry) => entry.command === "git init")?.practiceTeachingNote).toBeUndefined();
   });
 
   it("reuses featured scenario priority metadata inside command practice links", () => {
@@ -147,6 +157,23 @@ describe("git-docs", () => {
     expect(getPracticeGuidanceForCommandDoc("missing")).toBeUndefined();
   });
 
+  it("exposes reusable teaching notes for advanced command detail pages", () => {
+    expect(getPracticeTeachingNoteForCommandDoc("pull")).toMatchObject({
+      tone: "conflict",
+      eyebrow: "冲突观察点"
+    });
+    expect(getPracticeTeachingNoteForCommandDoc("branch")).toMatchObject({
+      tone: "release",
+      eyebrow: "发布视角"
+    });
+    expect(getPracticeTeachingNoteForCommandDoc("worktree")).toMatchObject({
+      tone: "worktree",
+      eyebrow: "并行开发视角"
+    });
+    expect(getPracticeTeachingNoteForCommandDoc("init")).toBeUndefined();
+    expect(getPracticeTeachingNoteForCommandDoc("missing")).toBeUndefined();
+  });
+
   it("builds featured scenario shortcuts for the docs landing page", () => {
     const entries = getFeaturedDocScenarios();
 
@@ -179,6 +206,10 @@ describe("git-docs", () => {
       emphasis: "secondary",
       pathIndex: 3,
       pathTotal: 4,
+      teachingNote: {
+        tone: "conflict",
+        eyebrow: "冲突观察点"
+      },
       nextScenario: {
         id: "version-rollback",
         badge: "历史修复"
@@ -189,6 +220,7 @@ describe("git-docs", () => {
         detailHref: "/docs/pull"
       }
     });
+    expect(entries[1]?.teachingNote).toBeUndefined();
     expect(entries[3]?.nextScenario).toBeUndefined();
   });
 
